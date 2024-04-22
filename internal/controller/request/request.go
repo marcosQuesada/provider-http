@@ -136,6 +136,7 @@ type external struct {
 	http      httpClient.Client
 }
 
+// nolint:gocyclo
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	cr, ok := mg.(*v1alpha1.Request)
 	if !ok {

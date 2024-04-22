@@ -1,24 +1,27 @@
 apiVersion: http.crossplane.io/v1alpha1
 kind: DisposableRequest
 metadata:
-  name: health-check
+  name: xxxx-check
 spec:
-  deletionPolicy: Orphan
+  deletionPolicy: Delete
   forProvider:
     # The 'expectedResponse' field is optional. If used, also set 'rollbackRetriesLimit', which determines the number of HTTP requests to be sent until the jq query returns true.    
     # expectedResponse: '.Body.job_status == "success"'
     insecureSkipTLSVerify: true
     waitTimeout: 5m
     rollbackRetriesLimit: 5
-    url:  http://todo.default.svc.cluster.local/health-check
+    url:  http://172.17.0.1:8081/api/v1/pets
     method: POST
     body: |
       {
-        "check_type": "simple",
-        "additional_info": "optional"
+        "color": "simple-color-2",
+        "id": 1112,
+        "name": "fake-simple-name-2",
+        "price": 123219,
+        "state": "foo-state-2"
       }
     headers:
-      User-Agent: 
-        - "Crossplane Health Checker"
+      Content-Type:
+      - "application/json"
   providerConfigRef:
     name: http-conf

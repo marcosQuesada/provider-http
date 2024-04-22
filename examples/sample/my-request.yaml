@@ -1,0 +1,55 @@
+apiVersion: http.crossplane.io/v1alpha1
+kind: Request
+metadata:
+  name: xxx-request
+spec:
+  forProvider:
+    headers:
+      Content-Type:
+        - "application/json"
+      Accept:
+        - "application/json"
+      Authorization:
+        - "Basic BASE64_ENCODED_USER_CREDENTIALS"
+    payload:
+      baseUrl: http://172.17.0.1:8081/api/v1/pets
+      body: |
+        {
+          "id": 1112,
+          "name": "fake-simple-name-2",
+          "color": "simple-color-2",
+          "price": 123219,
+          "state": "foo-state-2"
+        }
+
+    mappings:
+      - action: "CREATE"
+        method: "POST"
+        url: .payload.baseUrl
+        body: |
+          {
+            "id": .payload.body.id,
+            "name": .payload.body.name, 
+            "color": .payload.body.color,
+            "price": .payload.body.price,
+            "state": .payload.body.state
+          }
+      - action: "GET"
+        method: "GET"
+        url: (.payload.baseUrl + "/" + .response.body.name)
+      - action: "UPDATE"
+        method: "PUT"
+        url: (.payload.baseUrl + "/" + .response.body.name)
+        body: |
+          {
+            "id": .payload.body.id,
+            "name": .payload.body.name, 
+            "color": .payload.body.color,
+            "price": .payload.body.price,
+            "state": .payload.body.state
+          }
+      - action: "DELETE"
+        method: "DELETE"
+        url: (.payload.baseUrl + "/" + .response.body.name)
+  providerConfigRef:
+    name: http-conf

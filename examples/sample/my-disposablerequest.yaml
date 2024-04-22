@@ -1,7 +1,7 @@
 apiVersion: http.crossplane.io/v1alpha1
 kind: DisposableRequest
 metadata:
-  name: health-check
+  name: foo-check
 spec:
   deletionPolicy: Orphan
   forProvider:
@@ -10,15 +10,18 @@ spec:
     insecureSkipTLSVerify: true
     waitTimeout: 5m
     rollbackRetriesLimit: 5
-    url:  http://todo.default.svc.cluster.local/health-check
+    url:  http://172.17.0.1:8081/api/v1/pets
     method: POST
     body: |
       {
-        "check_type": "simple",
-        "additional_info": "optional"
+        "color": "simple-color",
+        "id": 1111,
+        "name": "fake-simple-name",
+        "price": 123213,
+        "state": "bar-state"
       }
     headers:
-      User-Agent: 
-        - "Crossplane Health Checker"
+      Content-Type:
+      - "application/json"
   providerConfigRef:
     name: http-conf
