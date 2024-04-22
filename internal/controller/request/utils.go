@@ -4,9 +4,9 @@ import (
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 )
 
-func getMappingByMethod(requestParams *v1alpha1.RequestParameters, method string) (*v1alpha1.Mapping, bool) {
+func getMappingByAction(requestParams *v1alpha1.RequestParameters, action Action) (*v1alpha1.Mapping, bool) {
 	for _, mapping := range requestParams.Mappings {
-		if mapping.Method == method {
+		if mapping.Action == string(action) {
 			return &mapping, true
 		}
 	}

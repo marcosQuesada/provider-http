@@ -18,6 +18,15 @@ const (
 	errNotValidJSON   = "%s is not a valid JSON string: %s"
 )
 
+type Action string
+
+const (
+	CREATE = Action("CREATE")
+	GET    = Action("GET")
+	UPDATE = Action("UPDATE")
+	DELETE = Action("DELETE")
+)
+
 type ObserveRequestDetails struct {
 	Details       httpClient.HttpDetails
 	ResponseError error
@@ -48,7 +57,7 @@ func (c *external) isUpToDate(ctx context.Context, cr *v1alpha1.Request) (Observ
 		return FailedObserve(), errors.New(errObjectNotFound)
 	}
 
-	requestDetails, err := c.requestDetails(cr, http.MethodGet)
+	requestDetails, err := c.requestDetails(cr, "GET")
 	if err != nil {
 		return FailedObserve(), err
 	}
@@ -94,14 +103,14 @@ func (c *external) compareResponseAndDesiredState(details httpClient.HttpDetails
 }
 
 func (c *external) desiredState(cr *v1alpha1.Request) (string, error) {
-	requestDetails, err := c.requestDetails(cr, http.MethodPut)
+	requestDetails, err := c.requestDetails(cr, UPDATE)
 	return requestDetails.Body, err
 }
 
-func (c *external) requestDetails(cr *v1alpha1.Request, method string) (requestgen.RequestDetails, error) {
-	mapping, ok := getMappingByMethod(&cr.Spec.ForProvider, method)
+func (c *external) requestDetails(cr *v1alpha1.Request, action Action) (requestgen.RequestDetails, error) {
+	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action)
 	if !ok {
-		return requestgen.RequestDetails{}, errors.Errorf(errMappingNotFound, method)
+		return requestgen.RequestDetails{}, errors.Errorf(errMappingNotFound, action)
 	}
 
 	return generateValidRequestDetails(cr, mapping)

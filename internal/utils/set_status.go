@@ -19,6 +19,8 @@ type RequestResource struct {
 	HttpResponse   httpClient.HttpResponse
 	HttpRequest    httpClient.HttpRequest
 	LocalClient    client.Client
+
+	Action string
 }
 
 func (rr *RequestResource) SetStatusCode() SetRequestStatusFunc {
@@ -55,7 +57,7 @@ func (rr *RequestResource) SetRequestDetails() SetRequestStatusFunc {
 	return func() {
 		if resp, ok := rr.Resource.(RequestDetailsSetter); ok {
 			if rr.HttpRequest.Method != "" {
-				resp.SetRequestDetails(rr.HttpRequest.URL, rr.HttpRequest.Method, rr.HttpRequest.Body, rr.HttpRequest.Headers)
+				resp.SetRequestDetails(rr.HttpRequest.URL, rr.Action, rr.HttpRequest.Method, rr.HttpRequest.Body, rr.HttpRequest.Headers)
 			}
 		}
 	}
@@ -116,7 +118,7 @@ type ResetFailures interface {
 }
 
 type RequestDetailsSetter interface {
-	SetRequestDetails(url, method, body string, headers map[string][]string)
+	SetRequestDetails(url, action, method, body string, headers map[string][]string)
 }
 
 func SetRequestResourceStatus(rr RequestResource, statusFuncs ...SetRequestStatusFunc) error {

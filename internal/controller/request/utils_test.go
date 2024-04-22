@@ -88,13 +88,13 @@ func Test_getMappingByMethod(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got, ok := getMappingByMethod(tc.args.requestParams, tc.args.method)
+			got, ok := getMappingByAction(tc.args.requestParams, tc.args.method)
 			if diff := cmp.Diff(tc.want.mapping, got); diff != "" {
-				t.Fatalf("getMappingByMethod(...): -want result, +got result: %s", diff)
+				t.Fatalf("getMappingByAction(...): -want result, +got result: %s", diff)
 			}
 
 			if diff := cmp.Diff(tc.want.ok, ok); diff != "" {
-				t.Fatalf("getMappingByMethod(...): -want result, +got result: %s", diff)
+				t.Fatalf("getMappingByAction(...): -want result, +got result: %s", diff)
 			}
 		})
 	}

@@ -30,6 +30,8 @@ type requestStatusHandler struct {
 	resource      *utils.RequestResource
 	responseError error
 	forProvider   v1alpha1.RequestParameters
+
+	action string
 }
 
 // SetRequestStatus updates the current Request's status to reflect the details of the last HTTP request that occurred.
@@ -47,6 +49,7 @@ func (r *requestStatusHandler) SetRequestStatus() error {
 		r.resource.SetBody(),
 		r.resource.SetRequestDetails(),
 	}
+	r.resource.Action = r.action
 
 	basicSetters = append(basicSetters, *r.extraSetters...)
 
@@ -117,7 +120,7 @@ func (r *requestStatusHandler) ResetFailures() {
 }
 
 // NewClient returns a new Request statusHandler
-func NewStatusHandler(ctx context.Context, cr *v1alpha1.Request, requestDetails httpClient.HttpDetails, err error, localKube client.Client, logger logging.Logger) (RequestStatusHandler, error) {
+func NewStatusHandler(ctx context.Context, action string, cr *v1alpha1.Request, requestDetails httpClient.HttpDetails, err error, localKube client.Client, logger logging.Logger) (RequestStatusHandler, error) {
 	// Get the latest version of the resource before updating
 	if err := localKube.Get(ctx, types.NamespacedName{Name: cr.Name, Namespace: cr.Namespace}, cr); err != nil {
 		return nil, errors.Wrap(err, "failed to get the latest version of the resource")
@@ -132,9 +135,12 @@ func NewStatusHandler(ctx context.Context, cr *v1alpha1.Request, requestDetails 
 			HttpRequest:    requestDetails.HttpRequest,
 			RequestContext: ctx,
 			LocalClient:    localKube,
+			Action:         action,
 		},
 		responseError: err,
 		forProvider:   cr.Spec.ForProvider,
+
+		action: action,
 	}
 
 	return requestStatusHandler, nil
