@@ -53,6 +53,10 @@ const (
 	errMappingNotFound              = "%s mapping doesn't exist in request, skipping operation"
 )
 
+var (
+	ErrMappingNotFound = errors.New(errMappingNotFound)
+)
+
 // Setup adds a controller that reconciles Request managed resources.
 func Setup(mgr ctrl.Manager, o controller.Options, timeout time.Duration) error {
 	name := managed.ControllerName(v1alpha1.RequestGroupKind)
@@ -142,6 +146,14 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if err != nil && err.Error() == errObjectNotFound {
 		return managed.ExternalObservation{
 			ResourceExists: false,
+		}, nil
+	}
+
+	if err != nil && errors.Is(err, ErrMappingNotFound) {
+		cr.Status.SetConditions(xpv1.Available())
+		return managed.ExternalObservation{
+			ResourceExists:   true,
+			ResourceUpToDate: true,
 		}, nil
 	}
 
