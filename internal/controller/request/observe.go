@@ -57,7 +57,7 @@ func (c *external) isUpToDate(ctx context.Context, cr *v1alpha1.Request) (Observ
 		return FailedObserve(), errors.New(errObjectNotFound)
 	}
 
-	requestDetails, err := c.requestDetails(cr, "GET")
+	requestDetails, err := c.requestDetails(cr, GET)
 	if err != nil {
 		return FailedObserve(), err
 	}
@@ -110,7 +110,7 @@ func (c *external) desiredState(cr *v1alpha1.Request) (string, error) {
 func (c *external) requestDetails(cr *v1alpha1.Request, action Action) (requestgen.RequestDetails, error) {
 	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action)
 	if !ok {
-		return requestgen.RequestDetails{}, errors.Errorf(errMappingNotFound, action)
+		return requestgen.RequestDetails{}, ErrMappingNotFound
 	}
 
 	return generateValidRequestDetails(cr, mapping)
