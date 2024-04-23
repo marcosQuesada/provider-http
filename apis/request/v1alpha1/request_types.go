@@ -43,6 +43,9 @@ type Mapping struct {
 	Body    string              `json:"body,omitempty"`
 	URL     string              `json:"url"`
 	Headers map[string][]string `json:"headers,omitempty"`
+
+	// +kubebuilder:validation:Enum=CREATE;GET;UPDATE;DELETE
+	Action string `json:"action"`
 }
 
 type Payload struct {

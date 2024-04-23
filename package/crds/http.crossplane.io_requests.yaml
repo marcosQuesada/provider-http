@@ -81,6 +81,13 @@ spec:
                   mappings:
                     items:
                       properties:
+                        action:
+                          enum:
+                          - CREATE
+                          - GET
+                          - UPDATE
+                          - DELETE
+                          type: string
                         body:
                           type: string
                         headers:
@@ -99,6 +106,7 @@ spec:
                         url:
                           type: string
                       required:
+                      - action
                       - method
                       - url
                       type: object
@@ -365,6 +373,13 @@ spec:
                 type: integer
               requestDetails:
                 properties:
+                  action:
+                    enum:
+                    - CREATE
+                    - GET
+                    - UPDATE
+                    - DELETE
+                    type: string
                   body:
                     type: string
                   headers:
@@ -383,6 +398,7 @@ spec:
                   url:
                     type: string
                 required:
+                - action
                 - method
                 - url
                 type: object

@@ -18,7 +18,6 @@ package request
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
@@ -155,7 +154,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, "failed to get the latest version of the resource")
 	}
 
-	statusHandler, err := statushandler.NewStatusHandler(ctx, cr, observeRequestDetails.Details, observeRequestDetails.ResponseError, c.localKube, c.logger)
+	statusHandler, err := statushandler.NewStatusHandler(ctx, cr.Status.RequestDetails.Action, cr, observeRequestDetails.Details, observeRequestDetails.ResponseError, c.localKube, c.logger)
 	if err != nil {
 		return managed.ExternalObservation{}, err
 	}
@@ -178,10 +177,10 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}, nil
 }
 
-func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, method string) error {
-	mapping, ok := getMappingByMethod(&cr.Spec.ForProvider, method)
+func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, action Action) error {
+	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action)
 	if !ok {
-		c.logger.Info(errMappingNotFound, method)
+		c.logger.Info(errMappingNotFound, action)
 		return nil
 	}
 
@@ -192,7 +191,7 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, metho
 
 	details, err := c.http.SendRequest(ctx, mapping.Method, requestDetails.Url, requestDetails.Body, requestDetails.Headers, cr.Spec.ForProvider.InsecureSkipTLSVerify)
 
-	statusHandler, err := statushandler.NewStatusHandler(ctx, cr, details, err, c.localKube, c.logger)
+	statusHandler, err := statushandler.NewStatusHandler(ctx, string(action), cr, details, err, c.localKube, c.logger)
 	if err != nil {
 		return err
 	}
@@ -206,7 +205,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotRequest)
 	}
 
-	return managed.ExternalCreation{}, errors.Wrap(c.deployAction(ctx, cr, http.MethodPost), errFailedToSendHttpRequest)
+	return managed.ExternalCreation{}, errors.Wrap(c.deployAction(ctx, cr, CREATE), errFailedToSendHttpRequest)
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
@@ -215,7 +214,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotRequest)
 	}
 
-	return managed.ExternalUpdate{}, errors.Wrap(c.deployAction(ctx, cr, http.MethodPut), errFailedToSendHttpRequest)
+	return managed.ExternalUpdate{}, errors.Wrap(c.deployAction(ctx, cr, UPDATE), errFailedToSendHttpRequest)
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -224,7 +223,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotRequest)
 	}
 
-	return errors.Wrap(c.deployAction(ctx, cr, http.MethodDelete), errFailedToSendHttpRequest)
+	return errors.Wrap(c.deployAction(ctx, cr, DELETE), errFailedToSendHttpRequest)
 }
 
 // generateValidRequestDetails generates valid request details based on the given Request resource and Mapping configuration.
