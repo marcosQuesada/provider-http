@@ -50,11 +50,46 @@ type DisposableRequestParameters struct {
 	ExpectedResponse string `json:"expectedResponse,omitempty"`
 }
 
+// DependsOn refers to an object by Name, Kind, APIVersion, etc. It is used to
+// reference other Object or arbitrary Kubernetes resource which is either
+// cluster or namespace scoped.
+type DependsOn struct {
+	// APIVersion of the referenced object.
+	// +kubebuilder:default=kubernetes.crossplane.io/v1alpha1
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty"`
+	// Kind of the referenced object.
+	// +kubebuilder:default=Object
+	// +optional
+	Kind string `json:"kind,omitempty"`
+	// Name of the referenced object.
+	Name string `json:"name"`
+	// Namespace of the referenced object.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+
+	// FieldPath defines the object source to assess value (optional)
+	FieldPath *string `json:"fieldPath"`
+
+	// ExpectedValue defines value to assert on resolved reference field (optional)
+	ExpectedValue *string `json:"expectedValue"`
+}
+
+// Reference refers to an Object or arbitrary Kubernetes resource and optionally
+// patch values from that resource to the current Object.
+type Reference struct {
+	// DependsOn is used to declare dependency on other Object or arbitrary
+	// Kubernetes resource.
+	// +optional
+	*DependsOn `json:"dependsOn,omitempty"`
+}
+
 // A DisposableRequestSpec defines the desired state of a DisposableRequest.
 type DisposableRequestSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
 
 	ForProvider DisposableRequestParameters `json:"forProvider"`
+	References  []Reference                 `json:"references,omitempty"`
 }
 
 type Response struct {

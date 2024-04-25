@@ -18,10 +18,13 @@ package request
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/crossplane/crossplane-runtime/pkg/fieldpath"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -51,6 +54,12 @@ const (
 	errFailedToUpdateStatusFailures = "failed to reset status failures counter"
 	errFailedUpdateStatusConditions = "failed updating status conditions"
 	errMappingNotFound              = "%s mapping doesn't exist in request, skipping operation"
+
+	errGetReferencedResource                = "cannot get referenced resource"
+	errPatchFromReferencedResource          = "cannot patch from referenced resource"
+	errResolveResourceReferenceValue        = "cannot resolve resource reference value"
+	errResolveResourceReferenceIsEmpty      = "cannot resolve resource reference, value is empty"
+	errResolveResourceReferenceIsNotAString = "cannot resolve resource reference, value is not a string"
 )
 
 var (
@@ -162,6 +171,11 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, errFailedToCheckIfUpToDate)
 	}
 
+	// Resolve references
+	if err := c.resolveReferencies(ctx, cr); err != nil {
+		return managed.ExternalObservation{}, err
+	}
+
 	// Get the latest version of the resource before updating
 	if err := c.localKube.Get(ctx, types.NamespacedName{Name: cr.Name, Namespace: cr.Namespace}, cr); err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, "failed to get the latest version of the resource")
@@ -256,4 +270,68 @@ func generateValidRequestDetails(cr *v1alpha1.Request, mapping *v1alpha1.Mapping
 	}
 
 	return requestDetails, nil
+}
+
+// resolveReferencies resolves references for the current Object. If it fails to
+// resolve some reference, e.g.: due to reference not ready, it will then return
+// error and requeue to wait for resolving it next time.
+// nolint:gocyclo
+func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request) error {
+	c.logger.Debug("Resolving referencies.")
+
+	// Loop through references to resolve each referenced resource
+	for _, ref := range obj.Spec.References {
+		if ref.DependsOn == nil {
+			continue
+		}
+
+		refAPIVersion := ref.DependsOn.APIVersion
+		refKind := ref.DependsOn.Kind
+		refNamespace := ref.DependsOn.Namespace
+		refName := ref.DependsOn.Name
+		res := &unstructured.Unstructured{}
+		res.SetAPIVersion(refAPIVersion)
+		res.SetKind(refKind)
+		// Try to get referenced resource
+		err := c.localKube.Get(ctx, client.ObjectKey{
+			Namespace: refNamespace,
+			Name:      refName,
+		}, res)
+
+		if err != nil {
+			return errors.Wrap(err, errGetReferencedResource)
+		}
+
+		// assert res ref.PatchesFrom.FieldPath value
+		paved, err := fieldpath.PaveObject(res)
+		if err != nil {
+			return err
+		}
+
+		if ref.DependsOn.FieldPath == nil {
+			return nil
+		}
+		out, err := paved.GetValue(*ref.DependsOn.FieldPath)
+		if err != nil {
+			return err
+		}
+
+		o, ok := out.(string)
+		if !ok {
+			return errors.Wrap(err, errResolveResourceReferenceIsNotAString)
+		}
+		if ok && ref.DependsOn.ExpectedValue == nil {
+			if o == "" {
+				return errors.Wrap(err, errResolveResourceReferenceIsEmpty)
+			}
+		}
+
+		if ref.DependsOn.ExpectedValue != nil && ok {
+			if strings.TrimSpace(o) != strings.TrimSpace(*ref.DependsOn.ExpectedValue) {
+				return errors.Wrap(err, errResolveResourceReferenceValue)
+			}
+		}
+	}
+
+	return nil
 }
