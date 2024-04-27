@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/imdario/mergo"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -368,6 +369,18 @@ func TestPatchFieldValueToObject(t *testing.T) {
 	value := "23213123"
 	err := v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
+}
+
+func TestMergeBodies(t *testing.T) {
+	p1 := map[string]interface{}{
+		"A": 3, "B": "note", "C": true,
+	}
+	p2 := map[string]interface{}{
+		"B": "", "C": false,
+	}
+	if err := mergo.Merge(&p1, p2, mergo.WithOverwriteWithEmptyValue); err != nil {
+		t.Error(err)
+	}
 }
 
 /**

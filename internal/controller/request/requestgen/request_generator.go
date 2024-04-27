@@ -1,9 +1,11 @@
 package requestgen
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
@@ -37,12 +39,40 @@ func GenerateRequestDetails(methodMapping v1alpha1.Mapping, forProvider v1alpha1
 		return RequestDetails{}, err, false
 	}
 
+	bodyObject := forProvider.Payload.BodyObject
+	if len(bodyObject.Raw) > 0 && (methodMapping.Action == "CREATE" || methodMapping.Action == "UPDATE") { // @TODO
+		body, err = mergeBody([]byte(body), bodyObject.Raw)
+		if err != nil {
+			return RequestDetails{}, fmt.Errorf("unable to merge bodies, %w", err), false
+		}
+	}
+
 	headers, err := generateHeaders(coalesceHeaders(methodMapping.Headers, forProvider.Headers), jqObject)
 	if err != nil {
 		return RequestDetails{}, err, false
 	}
 
 	return RequestDetails{Body: body, Url: url, Headers: headers}, nil, true
+}
+
+func mergeBody(src, patch []byte) (string, error) {
+	current := map[string]interface{}{}
+	if err := json.Unmarshal(src, &current); err != nil {
+		return "", fmt.Errorf("unable to unmarshall, %w", err)
+	}
+	bom := map[string]interface{}{}
+	if err := json.Unmarshal(patch, &bom); err != nil {
+		return "", fmt.Errorf("unable to unmarshall, %w", err)
+	}
+
+	if err := mergo.Merge(&current, bom, mergo.WithOverwriteWithEmptyValue); err != nil {
+		return "", fmt.Errorf("unable to merge, %w", err)
+	}
+	raw, err := json.Marshal(bom)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshall, %w", err)
+	}
+	return string(raw), nil
 }
 
 // generateRequestObject creates a JSON-compatible map from the specified Request's ForProvider and Response fields.
