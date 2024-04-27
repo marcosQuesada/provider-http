@@ -7,6 +7,7 @@ require (
 	github.com/crossplane/crossplane-tools v0.0.0-20230327091744-4236bf732aa5
 	github.com/google/go-cmp v0.5.9
 	github.com/pkg/errors v0.9.1
+	github.com/stretchr/testify v1.8.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3
@@ -14,7 +15,10 @@ require (
 	sigs.k8s.io/controller-tools v0.11.3
 )
 
-require github.com/itchyny/timefmt-go v0.1.5 // indirect
+require (
+	github.com/itchyny/timefmt-go v0.1.5 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+)
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect

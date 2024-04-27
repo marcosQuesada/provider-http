@@ -22,6 +22,7 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -51,6 +52,9 @@ const (
 	errFailedToUpdateStatusFailures = "failed to reset status failures counter"
 	errFailedUpdateStatusConditions = "failed updating status conditions"
 	errMappingNotFound              = "%s mapping doesn't exist in request, skipping operation"
+	errGetReferencedResource        = "cannot get referenced resource"
+	errPatchFromReferencedResource  = "cannot patch from referenced resource"
+	errResolveResourceReferences    = "cannot resolve resource references"
 )
 
 var (
@@ -141,6 +145,11 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	cr, ok := mg.(*v1alpha1.Request)
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotRequest)
+	}
+
+	if err := c.resolveReferencies(ctx, cr); err != nil {
+
+		return managed.ExternalObservation{}, errors.Wrap(err, errResolveResourceReferences)
 	}
 
 	observeRequestDetails, err := c.isUpToDate(ctx, cr)
@@ -256,4 +265,61 @@ func generateValidRequestDetails(cr *v1alpha1.Request, mapping *v1alpha1.Mapping
 	}
 
 	return requestDetails, nil
+}
+
+func getReferenceInfo(ref v1alpha1.Reference) (string, string, string, string) {
+	var apiVersion, kind, namespace, name string
+
+	if ref.PatchesFrom != nil {
+		// Reference information defined in PatchesFrom
+		apiVersion = ref.PatchesFrom.APIVersion
+		kind = ref.PatchesFrom.Kind
+		namespace = ref.PatchesFrom.Namespace
+		name = ref.PatchesFrom.Name
+	} else if ref.DependsOn != nil {
+		// Reference information defined in DependsOn
+		apiVersion = ref.DependsOn.APIVersion
+		kind = ref.DependsOn.Kind
+		namespace = ref.DependsOn.Namespace
+		name = ref.DependsOn.Name
+	}
+
+	return apiVersion, kind, namespace, name
+}
+
+// resolveReferencies resolves references for the current Object. If it fails to
+// resolve some reference, e.g.: due to reference not ready, it will then return
+// error and requeue to wait for resolving it next time.
+func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request) error {
+	c.logger.Debug("Resolving referencies.")
+
+	// Loop through references to resolve each referenced resource
+	for _, ref := range obj.Spec.References {
+		if ref.DependsOn == nil && ref.PatchesFrom == nil {
+			continue
+		}
+
+		refAPIVersion, refKind, refNamespace, refName := getReferenceInfo(ref)
+		res := &unstructured.Unstructured{}
+		res.SetAPIVersion(refAPIVersion)
+		res.SetKind(refKind)
+		// Try to get referenced resource
+		err := c.localKube.Get(ctx, client.ObjectKey{
+			Namespace: refNamespace,
+			Name:      refName,
+		}, res)
+
+		if err != nil {
+			return errors.Wrap(err, errGetReferencedResource)
+		}
+
+		// Patch fields if any
+		if ref.PatchesFrom != nil && ref.PatchesFrom.FieldPath != nil {
+			if err := ref.ApplyFromFieldPathPatch(res, obj); err != nil {
+				return errors.Wrap(err, errPatchFromReferencedResource)
+			}
+		}
+	}
+
+	return nil
 }

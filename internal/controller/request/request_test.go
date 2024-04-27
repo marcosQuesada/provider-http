@@ -2,8 +2,10 @@ package request
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -328,3 +330,65 @@ func Test_httpExternal_Delete(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchFieldValueToObject(t *testing.T) {
+
+	to := &v1alpha1.Request{
+		TypeMeta: v1.TypeMeta{
+			APIVersion: "http.crossplane.io/v1alpha1",
+			Kind:       "Request",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "xxx-request",
+			Namespace: "Default",
+		},
+		Spec: v1alpha1.RequestSpec{
+			ForProvider: v1alpha1.RequestParameters{
+				Mappings: []v1alpha1.Mapping{
+					{
+						Method: http.MethodGet,
+						URL:    "http://127.0.0.1:8081/api/v1/pets",
+					},
+				},
+				Payload: v1alpha1.Payload{
+					BaseUrl: "http://127.0.0.1:8081/api/v1/pets",
+					Body:    "{ \"id\": 1112, \"name\": \"fake-simple-name-2\", \"color\": \"simple-color-2\", \"price\": 123219, \"state\": \"foo-state-2\" }",
+				},
+				Headers: map[string][]string{
+					"Authorization": []string{"Basic BASE64_ENCODED_USER_CREDENTIALS"},
+				},
+				WaitTimeout:           nil,
+				InsecureSkipTLSVerify: false,
+			},
+		},
+		Status: v1alpha1.RequestStatus{},
+	}
+
+	path := "spec.forProvider.headers.Authorization[0]"
+	value := "23213123"
+	err := v1alpha1.PatchFieldValueToObject(path, value, to)
+	require.NoError(t, err)
+}
+
+/**
+runtime.RawExtension{
+			Object: &Foo{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "sample.org/v2",
+					Kind:       "Sample",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      strconv.Itoa(i),
+					Namespace: "default",
+					Labels: map[string]string{
+						"label-key-1": "label-value-1",
+					},
+					Annotations: map[string]string{
+						"annotations-key-1": "annotations-value-1",
+					},
+				},
+				Spec: FooSpec{
+					Flied: i,
+				},
+			},
+*/

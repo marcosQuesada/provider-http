@@ -3,6 +3,26 @@ kind: Request
 metadata:
   name: xxx-request
 spec:
+  references:
+    - dependsOn:
+        apiVersion: v1
+        kind: ConfigMap
+        name: foobarx
+        namespace: default
+    - patchesFrom:
+        apiVersion: v1
+        kind: ConfigMap
+        name: foobarx
+        namespace: default
+        fieldPath: data.auth
+      toFieldPath: spec.forProvider.headers.Authorization[0]
+    - patchesFrom:
+        apiVersion: v1
+        kind: ConfigMap
+        name: foobarx
+        namespace: default
+        fieldPath: data.name
+      toFieldPath: spec.forProvider.payload.body-object.name
   forProvider:
     headers:
       Content-Type:
@@ -12,7 +32,7 @@ spec:
       Authorization:
         - "Basic BASE64_ENCODED_USER_CREDENTIALS"
     payload:
-      baseUrl: http://172.17.0.1:8081/api/v1/pets
+      baseUrl: http://127.0.0.1:8081/api/v1/pets
       body: |
         {
           "id": 1112,
@@ -21,6 +41,12 @@ spec:
           "price": 123219,
           "state": "foo-state-2"
         }
+      body-object:
+        id: 1112
+        name: "fake-simple-name-2"
+        color: "simple-color-2"
+        price: 123219
+        state: "foo-state-2"
 
     mappings:
       - action: "CREATE"

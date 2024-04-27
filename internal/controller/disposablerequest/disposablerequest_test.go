@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/crossplane-contrib/provider-http/apis/disposablerequest/v1alpha1"
+	"github.com/crossplane-contrib/provider-http/internal/jq"
+	"github.com/stretchr/testify/require"
 
 	httpClient "github.com/crossplane-contrib/provider-http/internal/clients/http"
 	"github.com/crossplane-contrib/provider-http/internal/utils"
@@ -428,4 +430,44 @@ func Test_deployAction(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExpectedResponse(t *testing.T) {
+
+	expected := ".Body.job_status == \"success\""
+	responseMap := map[string]interface{}{
+		"Body": map[string]interface{}{
+			"job_status": "success",
+		},
+	}
+	isExpected, err := jq.ParseBool(expected, responseMap)
+
+	require.NoError(t, err)
+	require.True(t, isExpected)
+
+	// . == null or . == ""
+
+	expected = ".Body.error == null"
+	responseMap = map[string]interface{}{
+		"Body": map[string]interface{}{
+			// "error": map[string]interface{}{"success": "foo", "bar": "zoom"},
+			"job_status": "success",
+		},
+	}
+	isExpected, err = jq.ParseBool(expected, responseMap)
+	require.NoError(t, err)
+	require.True(t, isExpected)
+}
+
+func TestJQContainsError(t *testing.T) {
+	expected := ".Body.error != null"
+	responseMap := map[string]interface{}{
+		"Body": map[string]interface{}{
+			"error": map[string]interface{}{"success": "foo", "bar": "zoom"},
+			// "job_status": "success",
+		},
+	}
+	isExpected, err := jq.ParseBool(expected, responseMap)
+	require.NoError(t, err)
+	require.True(t, isExpected)
 }
