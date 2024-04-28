@@ -4,6 +4,13 @@ metadata:
   name: foo-check
 spec:
   deletionPolicy: Orphan
+  references:
+    - dependsOn:
+        apiVersion: nop.crossplane.io/v1alpha1
+        kind: NopResource
+        name: foo
+        fieldPath: status.response.body
+        expectedValue: READY # Optional, if not set requires NON empty value
   forProvider:
     # The 'expectedResponse' field is optional. If used, also set 'rollbackRetriesLimit', which determines the number of HTTP requests to be sent until the jq query returns true.    
     # expectedResponse: '.Body.job_status == "success"'

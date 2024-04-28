@@ -53,10 +53,45 @@ type Payload struct {
 	Body    string `json:"body,omitempty"`
 }
 
+// DependsOn refers to an object by Name, Kind, APIVersion, etc. It is used to
+// reference other Object or arbitrary Kubernetes resource which is either
+// cluster or namespace scoped.
+type DependsOn struct {
+	// APIVersion of the referenced object.
+	// +kubebuilder:default=kubernetes.crossplane.io/v1alpha1
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty"`
+	// Kind of the referenced object.
+	// +kubebuilder:default=Object
+	// +optional
+	Kind string `json:"kind,omitempty"`
+	// Name of the referenced object.
+	Name string `json:"name"`
+	// Namespace of the referenced object.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+	// FieldPath is the path of the field on the resource whose value is to be
+	// used as input. (optional)
+	FieldPath *string `json:"fieldPath"`
+
+	// ExpectedValue defines value to assert on resolved reference field (optional)
+	ExpectedValue *string `json:"expectedValue"`
+}
+
+// Reference refers to an Object or arbitrary Kubernetes resource and optionally
+// patch values from that resource to the current Object.
+type Reference struct {
+	// DependsOn is used to declare dependency on other Object or arbitrary
+	// Kubernetes resource.
+	// +optional
+	*DependsOn `json:"dependsOn,omitempty"`
+}
+
 // A RequestSpec defines the desired state of a Request.
 type RequestSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
 	ForProvider       RequestParameters `json:"forProvider"`
+	References        []Reference       `json:"references,omitempty"`
 }
 
 // RequestObservation are the observable fields of a Request.
