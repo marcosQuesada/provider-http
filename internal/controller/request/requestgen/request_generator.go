@@ -39,13 +39,13 @@ func GenerateRequestDetails(methodMapping v1alpha1.Mapping, forProvider v1alpha1
 		return RequestDetails{}, err, false
 	}
 
-	bodyObject := forProvider.Payload.BodyObject
-	if len(bodyObject.Raw) > 0 && len(body) > 0 {
-		body, err = mergeBody([]byte(body), bodyObject.Raw)
-		if err != nil {
-			return RequestDetails{}, fmt.Errorf("unable to merge bodies, %w", err), false
-		}
-	}
+	//bodyObject := forProvider.Payload.Body
+	//if len(bodyObject.Raw) > 0 && len(body) > 0 {
+	//	body, err = mergeBody([]byte(body), bodyObject.Raw)
+	//	if err != nil {
+	//		return RequestDetails{}, fmt.Errorf("unable to merge bodies, %w", err), false
+	//	}
+	//}
 
 	headers, err := generateHeaders(coalesceHeaders(methodMapping.Headers, forProvider.Headers), jqObject)
 	if err != nil {

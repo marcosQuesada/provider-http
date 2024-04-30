@@ -22,7 +22,7 @@ spec:
         name: foobarx
         namespace: default
         fieldPath: data.name
-      toFieldPath: spec.forProvider.payload.body-object.name
+      toFieldPath: spec.forProvider.payload.body.name
   forProvider:
     headers:
       Content-Type:
@@ -33,15 +33,7 @@ spec:
         - "Basic BASE64_ENCODED_USER_CREDENTIALS"
     payload:
       baseUrl: http://127.0.0.1:8081/api/v1/pets
-      body: |
-        {
-          "id": 1112,
-          "name": "fake-simple-name-2",
-          "color": "simple-color-2",
-          "price": 123219,
-          "state": "foo-state-2"
-        }
-      body-object:
+      body:
         id: 1112
         name: "fake-simple-name-2"
         color: "simple-color-2"

@@ -64,12 +64,10 @@ type Mapping struct {
 
 type Payload struct {
 	BaseUrl string `json:"baseUrl,omitempty"`
-	Body    string `json:"body,omitempty"`
-	// Raw JSON representation of the kubernetes object to be created.
 
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
-	BodyObject runtime.RawExtension `json:"body-object,omitempty"`
+	Body runtime.RawExtension `json:"body,omitempty"`
 }
 
 // A RequestSpec defines the desired state of a Request.

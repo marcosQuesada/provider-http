@@ -346,8 +346,8 @@ func TestPatchFieldValueToObject(t *testing.T) {
 		},
 		Spec: v1alpha1.RequestSpec{
 			ForProvider: v1alpha1.RequestParameters{
-				Mappings: []v1alpha1.Mapping{
-					{
+				Mappings: v1alpha1.Mappings{
+					Get: &v1alpha1.Mapping{
 						Method: http.MethodGet,
 						URL:    "http://127.0.0.1:8081/api/v1/pets",
 					},
@@ -374,7 +374,7 @@ func TestPatchFieldValueToObject(t *testing.T) {
 	err := v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
 
-	path = "spec.forProvider.payload.body-object.foo"
+	path = "spec.forProvider.payload.body.foo"
 	value = "2423423423"
 	err = v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
