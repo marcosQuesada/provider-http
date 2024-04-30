@@ -79,38 +79,112 @@ spec:
                       certificate checks for the HTTP request
                     type: boolean
                   mappings:
-                    items:
-                      properties:
-                        action:
-                          enum:
-                          - CREATE
-                          - GET
-                          - UPDATE
-                          - DELETE
-                          type: string
-                        body:
-                          type: string
-                        headers:
-                          additionalProperties:
-                            items:
-                              type: string
-                            type: array
-                          type: object
-                        method:
-                          enum:
-                          - POST
-                          - GET
-                          - PUT
-                          - DELETE
-                          type: string
-                        url:
-                          type: string
-                      required:
-                      - action
-                      - method
-                      - url
-                      type: object
-                    type: array
+                    properties:
+                      create:
+                        properties:
+                          action:
+                            description: '@Deprecated'
+                            type: string
+                          body:
+                            type: string
+                          headers:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            type: object
+                          method:
+                            enum:
+                            - POST
+                            - GET
+                            - PUT
+                            - DELETE
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - method
+                        - url
+                        type: object
+                      delete:
+                        properties:
+                          action:
+                            description: '@Deprecated'
+                            type: string
+                          body:
+                            type: string
+                          headers:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            type: object
+                          method:
+                            enum:
+                            - POST
+                            - GET
+                            - PUT
+                            - DELETE
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - method
+                        - url
+                        type: object
+                      get:
+                        properties:
+                          action:
+                            description: '@Deprecated'
+                            type: string
+                          body:
+                            type: string
+                          headers:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            type: object
+                          method:
+                            enum:
+                            - POST
+                            - GET
+                            - PUT
+                            - DELETE
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - method
+                        - url
+                        type: object
+                      update:
+                        properties:
+                          action:
+                            description: '@Deprecated'
+                            type: string
+                          body:
+                            type: string
+                          headers:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            type: object
+                          method:
+                            enum:
+                            - POST
+                            - GET
+                            - PUT
+                            - DELETE
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - method
+                        - url
+                        type: object
+                    type: object
                   payload:
                     properties:
                       baseUrl:
@@ -455,11 +529,7 @@ spec:
               requestDetails:
                 properties:
                   action:
-                    enum:
-                    - CREATE
-                    - GET
-                    - UPDATE
-                    - DELETE
+                    description: '@Deprecated'
                     type: string
                   body:
                     type: string
@@ -479,7 +549,6 @@ spec:
                   url:
                     type: string
                 required:
-                - action
                 - method
                 - url
                 type: object

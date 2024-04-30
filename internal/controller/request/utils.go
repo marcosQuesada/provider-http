@@ -5,10 +5,15 @@ import (
 )
 
 func getMappingByAction(requestParams *v1alpha1.RequestParameters, action Action) (*v1alpha1.Mapping, bool) {
-	for _, mapping := range requestParams.Mappings {
-		if mapping.Action == string(action) {
-			return &mapping, true
-		}
+	switch action {
+	case CREATE:
+		return requestParams.Mappings.Create, true
+	case GET:
+		return requestParams.Mappings.Get, true
+	case UPDATE:
+		return requestParams.Mappings.Update, true
+	case DELETE:
+		return requestParams.Mappings.Delete, true
 	}
 	return nil, false
 }

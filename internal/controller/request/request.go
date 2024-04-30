@@ -176,7 +176,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, "failed to get the latest version of the resource")
 	}
 
-	statusHandler, err := statushandler.NewStatusHandler(ctx, cr.Status.RequestDetails.Action, cr, observeRequestDetails.Details, observeRequestDetails.ResponseError, c.localKube, c.logger)
+	statusHandler, err := statushandler.NewStatusHandler(ctx, cr, observeRequestDetails.Details, observeRequestDetails.ResponseError, c.localKube, c.logger)
 	if err != nil {
 		return managed.ExternalObservation{}, err
 	}
@@ -213,7 +213,7 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, actio
 
 	details, err := c.http.SendRequest(ctx, mapping.Method, requestDetails.Url, requestDetails.Body, requestDetails.Headers, cr.Spec.ForProvider.InsecureSkipTLSVerify)
 
-	statusHandler, err := statushandler.NewStatusHandler(ctx, string(action), cr, details, err, c.localKube, c.logger)
+	statusHandler, err := statushandler.NewStatusHandler(ctx, cr, details, err, c.localKube, c.logger)
 	if err != nil {
 		return err
 	}

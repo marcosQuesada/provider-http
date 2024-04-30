@@ -30,8 +30,6 @@ type requestStatusHandler struct {
 	resource      *utils.RequestResource
 	responseError error
 	forProvider   v1alpha1.RequestParameters
-
-	action string
 }
 
 // SetRequestStatus updates the current Request's status to reflect the details of the last HTTP request that occurred.
@@ -49,7 +47,6 @@ func (r *requestStatusHandler) SetRequestStatus() error {
 		r.resource.SetBody(),
 		r.resource.SetRequestDetails(),
 	}
-	r.resource.Action = r.action
 
 	basicSetters = append(basicSetters, *r.extraSetters...)
 
@@ -100,14 +97,32 @@ func (r *requestStatusHandler) appendExtraSetters(forProvider v1alpha1.RequestPa
 // and RequestParameters. It generates request details according to the given mapping and response. If the request
 // details are not valid, it means that instead of using the response, the cache should be used.
 func (r *requestStatusHandler) shouldSetCache(forProvider v1alpha1.RequestParameters) bool {
-	for _, mapping := range forProvider.Mappings {
-		response := responseconverter.HttpResponseToV1alpha1Response(r.resource.HttpResponse)
-		requestDetails, _, ok := requestgen.GenerateRequestDetails(mapping, forProvider, response)
-		if !(requestgen.IsRequestValid(requestDetails) && ok) {
-			return false
-		}
+	if forProvider.Mappings.Create != nil && !r.isActionMappingValid(*forProvider.Mappings.Create, forProvider) {
+		return false
+	}
+	if forProvider.Mappings.Get != nil && !r.isActionMappingValid(*forProvider.Mappings.Get, forProvider) {
+		return false
+	}
+	if forProvider.Mappings.Update != nil && !r.isActionMappingValid(*forProvider.Mappings.Update, forProvider) {
+		return false
+	}
+	if forProvider.Mappings.Delete != nil && !r.isActionMappingValid(*forProvider.Mappings.Delete, forProvider) {
+		return false
 	}
 
+	return true
+}
+
+func (r *requestStatusHandler) isActionMappingValid(m v1alpha1.Mapping, forProvider v1alpha1.RequestParameters) bool {
+	response := responseconverter.HttpResponseToV1alpha1Response(r.resource.HttpResponse)
+	requestDetails, err, ok := requestgen.GenerateRequestDetails(m, forProvider, response)
+	if err != nil {
+		//return false, errors.Wrap(err, "unable to generate request details")
+		r.logger.Info("Error on GenerateRequestDetails", "error", err)
+	}
+	if !(requestgen.IsRequestValid(requestDetails) && ok) {
+		return false
+	}
 	return true
 }
 
@@ -120,7 +135,7 @@ func (r *requestStatusHandler) ResetFailures() {
 }
 
 // NewClient returns a new Request statusHandler
-func NewStatusHandler(ctx context.Context, action string, cr *v1alpha1.Request, requestDetails httpClient.HttpDetails, err error, localKube client.Client, logger logging.Logger) (RequestStatusHandler, error) {
+func NewStatusHandler(ctx context.Context, cr *v1alpha1.Request, requestDetails httpClient.HttpDetails, err error, localKube client.Client, logger logging.Logger) (RequestStatusHandler, error) {
 	// Get the latest version of the resource before updating
 	if err := localKube.Get(ctx, types.NamespacedName{Name: cr.Name, Namespace: cr.Namespace}, cr); err != nil {
 		return nil, errors.Wrap(err, "failed to get the latest version of the resource")
@@ -135,12 +150,9 @@ func NewStatusHandler(ctx context.Context, action string, cr *v1alpha1.Request, 
 			HttpRequest:    requestDetails.HttpRequest,
 			RequestContext: ctx,
 			LocalClient:    localKube,
-			Action:         action,
 		},
 		responseError: err,
 		forProvider:   cr.Spec.ForProvider,
-
-		action: action,
 	}
 
 	return requestStatusHandler, nil

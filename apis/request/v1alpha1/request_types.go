@@ -29,7 +29,7 @@ import (
 
 // RequestParameters are the configurable fields of a Request.
 type RequestParameters struct {
-	Mappings []Mapping           `json:"mappings"`
+	Mappings Mappings            `json:"mappings"`
 	Payload  Payload             `json:"payload"`
 	Headers  map[string][]string `json:"headers,omitempty"`
 
@@ -39,6 +39,17 @@ type RequestParameters struct {
 	InsecureSkipTLSVerify bool `json:"insecureSkipTLSVerify,omitempty"`
 }
 
+type Mappings struct {
+	// +optional
+	Create *Mapping `json:"create"`
+	// +optional
+	Get *Mapping `json:"get"`
+	// +optional
+	Update *Mapping `json:"update"`
+	// +optional
+	Delete *Mapping `json:"delete"`
+}
+
 type Mapping struct {
 	// +kubebuilder:validation:Enum=POST;GET;PUT;DELETE
 	Method  string              `json:"method"`
@@ -46,8 +57,9 @@ type Mapping struct {
 	URL     string              `json:"url"`
 	Headers map[string][]string `json:"headers,omitempty"`
 
-	// +kubebuilder:validation:Enum=CREATE;GET;UPDATE;DELETE
-	Action string `json:"action"`
+	// @Deprecated
+	// +optional
+	Action *string `json:"action"`
 }
 
 type Payload struct {

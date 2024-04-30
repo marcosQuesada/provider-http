@@ -49,7 +49,7 @@ spec:
         state: "foo-state-2"
 
     mappings:
-      - action: "CREATE"
+      create:
         method: "POST"
         url: .payload.baseUrl
         body: |
@@ -60,10 +60,10 @@ spec:
             "price": .payload.body.price,
             "state": .payload.body.state
           }
-      - action: "GET"
+      get:
         method: "GET"
         url: (.payload.baseUrl + "/" + .response.body.name)
-      - action: "UPDATE"
+      update:
         method: "PUT"
         url: (.payload.baseUrl + "/" + .response.body.name)
         body: |
@@ -74,7 +74,7 @@ spec:
             "price": .payload.body.price,
             "state": .payload.body.state
           }
-      - action: "DELETE"
+      delete:
         method: "DELETE"
         url: (.payload.baseUrl + "/" + .response.body.name)
   providerConfigRef:

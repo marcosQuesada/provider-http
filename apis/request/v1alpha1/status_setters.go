@@ -27,12 +27,11 @@ func (d *Request) ResetFailures() {
 	d.Status.Error = ""
 }
 
-func (d *Request) SetRequestDetails(url, action, method, body string, headers map[string][]string) {
+func (d *Request) SetRequestDetails(url, method, body string, headers map[string][]string) {
 	d.Status.RequestDetails.Body = body
 	d.Status.RequestDetails.URL = url
 	d.Status.RequestDetails.Headers = headers
 	d.Status.RequestDetails.Method = method
-	d.Status.RequestDetails.Action = action
 }
 
 func (d *Request) SetCache(statusCode int, headers map[string][]string, body string) {

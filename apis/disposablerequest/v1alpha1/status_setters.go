@@ -26,7 +26,7 @@ func (d *DisposableRequest) SetError(err error) {
 	}
 }
 
-func (d *DisposableRequest) SetRequestDetails(url, _, method, body string, headers map[string][]string) {
+func (d *DisposableRequest) SetRequestDetails(url, method, body string, headers map[string][]string) {
 	d.Status.RequestDetails.Body = body
 	d.Status.RequestDetails.URL = url
 	d.Status.RequestDetails.Headers = headers

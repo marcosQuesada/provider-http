@@ -40,7 +40,7 @@ func GenerateRequestDetails(methodMapping v1alpha1.Mapping, forProvider v1alpha1
 	}
 
 	bodyObject := forProvider.Payload.BodyObject
-	if len(bodyObject.Raw) > 0 && (methodMapping.Action == "CREATE" || methodMapping.Action == "UPDATE") { // @TODO
+	if len(bodyObject.Raw) > 0 && len(body) > 0 {
 		body, err = mergeBody([]byte(body), bodyObject.Raw)
 		if err != nil {
 			return RequestDetails{}, fmt.Errorf("unable to merge bodies, %w", err), false
