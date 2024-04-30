@@ -313,6 +313,8 @@ func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request
 			return errors.Wrap(err, errGetReferencedResource)
 		}
 
+		// @TODO: Assert Condition
+
 		// Patch fields if any
 		if ref.PatchesFrom != nil && ref.PatchesFrom.FieldPath != nil {
 			if err := ref.ApplyFromFieldPathPatch(res, obj); err != nil {

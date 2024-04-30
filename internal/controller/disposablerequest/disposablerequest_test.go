@@ -18,6 +18,7 @@ package disposablerequest
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/crossplane-contrib/provider-http/apis/disposablerequest/v1alpha1"
 	"github.com/crossplane-contrib/provider-http/internal/jq"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	httpClient "github.com/crossplane-contrib/provider-http/internal/clients/http"
 	"github.com/crossplane-contrib/provider-http/internal/utils"
@@ -468,6 +470,77 @@ func TestJQContainsError(t *testing.T) {
 		},
 	}
 	isExpected, err := jq.ParseBool(expected, responseMap)
+	require.NoError(t, err)
+	require.True(t, isExpected)
+}
+
+func TestJqFromRawExtension(t *testing.T) {
+	r := runtime.RawExtension{
+		Raw: []byte(`{
+    "apiVersion": "v1",
+    "kind": "Foo",
+    "metadata": {
+        "name": "foo",
+        "namespace": "default"
+    },
+    "spec": {
+        "containers": [
+            {
+                "image": "bar:v2",
+                "name": "bar"
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2024-04-27T22:32:51Z",
+                "reason": "Available",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastTransitionTime": "2024-04-27T22:32:51Z",
+                "reason": "ReconcileSuccess",
+                "status": "True",
+                "type": "Synced"
+            }
+        ],
+        "requestDetails": {
+        },
+        "response": {
+            "body": "{\"color\":\"simple-color-2\",\"id\":1112,\"name\":\"patched-name\",\"price\":123219,\"state\":\"foo-state-2\"}\n",
+            "body-object": {
+                "color": "simple-color-2",
+                "id": 1112,
+                "name": "patched-name",
+                "price": 123219,
+                "state": "foo-state-2"
+            },
+            "statusCode": 200
+        }
+    }
+}`),
+	}
+
+	rawMap := map[string]interface{}{}
+	err := json.Unmarshal(r.Raw, &rawMap)
+	require.NoError(t, err)
+
+	expected := ".status.response.statusCode == 200"
+	isExpected, err := jq.ParseBool(expected, rawMap)
+	require.NoError(t, err)
+	require.True(t, isExpected)
+
+	expected = ".status.conditions[].type == \"Ready\" and .status.conditions[].status == \"True\""
+	isExpected, err = jq.ParseBool(expected, rawMap)
+	require.NoError(t, err)
+	require.True(t, isExpected)
+
+	// '.items[] | select(.metadata.name == "my-pod").status.phase'
+	expected = "(.status.conditions[]| select(.type == \"Ready\").status == \"True\") and (.status.conditions[]| select(.type == \"Synced\").status == \"True\")"
+	//expected = ".status.conditions[].reason == \"Available\" and .status.conditions[].reason == \"ReconcileSuccess\""
+	isExpected, err = jq.ParseBool(expected, rawMap)
 	require.NoError(t, err)
 	require.True(t, isExpected)
 }

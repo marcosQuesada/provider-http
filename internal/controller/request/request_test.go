@@ -8,6 +8,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
@@ -354,6 +355,9 @@ func TestPatchFieldValueToObject(t *testing.T) {
 				Payload: v1alpha1.Payload{
 					BaseUrl: "http://127.0.0.1:8081/api/v1/pets",
 					Body:    "{ \"id\": 1112, \"name\": \"fake-simple-name-2\", \"color\": \"simple-color-2\", \"price\": 123219, \"state\": \"foo-state-2\" }",
+					BodyObject: runtime.RawExtension{
+						Raw: []byte(`{"foo":"bar", "zoom":"xxxx"}`),
+					},
 				},
 				Headers: map[string][]string{
 					"Authorization": []string{"Basic BASE64_ENCODED_USER_CREDENTIALS"},
@@ -369,6 +373,12 @@ func TestPatchFieldValueToObject(t *testing.T) {
 	value := "23213123"
 	err := v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
+
+	path = "spec.forProvider.payload.body-object.foo"
+	value = "2423423423"
+	err = v1alpha1.PatchFieldValueToObject(path, value, to)
+	require.NoError(t, err)
+
 }
 
 func TestMergeBodies(t *testing.T) {

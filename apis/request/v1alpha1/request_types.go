@@ -58,7 +58,6 @@ type Payload struct {
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
 	BodyObject runtime.RawExtension `json:"body-object,omitempty"`
-	//BodyObject map[string]AnyType `json:"body-object,omitempty"`
 }
 
 // A RequestSpec defines the desired state of a Request.
@@ -73,7 +72,11 @@ type RequestSpec struct {
 type Response struct {
 	Headers map[string][]string `json:"headers,omitempty"`
 	Body    string              `json:"body,omitempty"`
-	//BodyObject unstructured.Unstructured `json:"BodyObject,omitempty"`
+
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	BodyObject runtime.RawExtension `json:"body-object,omitempty"`
+
 	StatusCode int `json:"statusCode,omitempty"`
 }
 
@@ -232,16 +235,10 @@ func PatchFieldValueToObject(path string, value interface{}, to runtime.Object) 
 		return err
 	}
 
-	// "spec.forProvider.payload.body-object."+
 	err = paved.SetValue(path, value)
 	if err != nil {
 		return err
 	}
 
-	//raw, _ := json.Marshal(paved.UnstructuredContent())
-	//if err := json.Unmarshal(raw, to); err != nil {
-	//	return fmt.Errorf("unable to unmarshall, error %v", err)
-	//}
-	//return nil
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(paved.UnstructuredContent(), to)
 }

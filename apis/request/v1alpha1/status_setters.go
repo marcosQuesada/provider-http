@@ -12,6 +12,7 @@ func (d *Request) SetHeaders(headers map[string][]string) {
 
 func (d *Request) SetBody(body string) {
 	d.Status.Response.Body = body
+	d.Status.Response.BodyObject.Raw = []byte(body)
 }
 
 func (d *Request) SetError(err error) {

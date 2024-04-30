@@ -402,6 +402,8 @@ spec:
                     properties:
                       body:
                         type: string
+                      body-object:
+                        x-kubernetes-preserve-unknown-fields: true
                       headers:
                         additionalProperties:
                           items:
@@ -409,7 +411,6 @@ spec:
                           type: array
                         type: object
                       statusCode:
-                        description: BodyObject unstructured.Unstructured `json:"BodyObject,omitempty"`
                         type: integer
                     type: object
                 type: object
@@ -487,6 +488,8 @@ spec:
                 properties:
                   body:
                     type: string
+                  body-object:
+                    x-kubernetes-preserve-unknown-fields: true
                   headers:
                     additionalProperties:
                       items:
@@ -494,7 +497,6 @@ spec:
                       type: array
                     type: object
                   statusCode:
-                    description: BodyObject unstructured.Unstructured `json:"BodyObject,omitempty"`
                     type: integer
                 type: object
             type: object
