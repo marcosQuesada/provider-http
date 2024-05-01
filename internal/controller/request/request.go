@@ -18,8 +18,10 @@ package request
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/crossplane-contrib/provider-http/internal/jq"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -148,7 +150,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 
 	if err := c.resolveReferencies(ctx, cr); err != nil {
-
+		c.logger.Debug("Wait for referencies on Observe", "error", err)
 		return managed.ExternalObservation{}, errors.Wrap(err, errResolveResourceReferences)
 	}
 
@@ -222,24 +224,34 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, actio
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
+	c.logger.Debug("Create Request called.")
 	cr, ok := mg.(*v1alpha1.Request)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotRequest)
+	}
+	if err := c.resolveReferencies(ctx, cr); err != nil {
+		c.logger.Debug("Wait for referencies on Create", "error", err)
+		return managed.ExternalCreation{}, errors.Wrap(err, errResolveResourceReferences)
 	}
 
 	return managed.ExternalCreation{}, errors.Wrap(c.deployAction(ctx, cr, CREATE), errFailedToSendHttpRequest)
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+	c.logger.Debug("Update Request called.")
 	cr, ok := mg.(*v1alpha1.Request)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotRequest)
 	}
-
+	if err := c.resolveReferencies(ctx, cr); err != nil {
+		c.logger.Debug("Wait for referencies on Update", "error", err)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errResolveResourceReferences)
+	}
 	return managed.ExternalUpdate{}, errors.Wrap(c.deployAction(ctx, cr, UPDATE), errFailedToSendHttpRequest)
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
+	c.logger.Debug("Delete Request called.")
 	cr, ok := mg.(*v1alpha1.Request)
 	if !ok {
 		return errors.New(errNotRequest)
@@ -291,11 +303,11 @@ func getReferenceInfo(ref v1alpha1.Reference) (string, string, string, string) {
 // resolve some reference, e.g.: due to reference not ready, it will then return
 // error and requeue to wait for resolving it next time.
 func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request) error {
-	c.logger.Debug("Resolving referencies.")
+	c.logger.Debug("Resolving Request referencies.", "obj", obj.Name)
 
 	// Loop through references to resolve each referenced resource
 	for _, ref := range obj.Spec.References {
-		if ref.DependsOn == nil && ref.PatchesFrom == nil {
+		if ref.DependsOn == nil && ref.PatchesFrom == nil || obj.DeletionTimestamp != nil {
 			continue
 		}
 
@@ -314,6 +326,18 @@ func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request
 		}
 
 		// @TODO: Assert Condition
+
+		// status.response.statusCode == 200
+		if ref.DependsOn != nil && ref.DependsOn.Condition != "" {
+			isExpected, err := jq.ParseBool(ref.DependsOn.Condition, res.Object)
+			if err != nil {
+				return errors.Wrap(err, "unable to assert condition")
+			}
+
+			if !isExpected {
+				return fmt.Errorf("condition %s Not acomplished yet on %s %s", ref.DependsOn.Condition, ref.DependsOn.Kind, ref.DependsOn.Name)
+			}
+		}
 
 		// Patch fields if any
 		if ref.PatchesFrom != nil && ref.PatchesFrom.FieldPath != nil {

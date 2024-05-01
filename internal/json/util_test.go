@@ -5,19 +5,20 @@ import (
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
 	testPostMapping = v1alpha1.Mapping{
 		Method: "POST",
-		Body:   "{ username: .payload.body.username, email: .payload.body.email }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: .payload.body.username, email: .payload.body.email }")},
 		URL:    ".payload.baseUrl",
 		// Headers: testHeaders,
 	}
 
 	testPutMapping = v1alpha1.Mapping{
 		Method: "PUT",
-		Body:   "{ username: \"john_doe_new_username\" }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: \"john_doe_new_username\" }")},
 		URL:    "(.payload.baseUrl + \"/\" + .response.body.id)",
 		// Headers: testHeaders,
 	}

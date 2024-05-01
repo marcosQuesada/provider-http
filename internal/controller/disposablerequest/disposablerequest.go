@@ -153,8 +153,12 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequest) error {
+	body := ""
+	if len(cr.Spec.ForProvider.Body.Raw) > 0 {
+		body = string(cr.Spec.ForProvider.Body.Raw)
+	}
 	details, err := c.http.SendRequest(ctx, cr.Spec.ForProvider.Method,
-		cr.Spec.ForProvider.URL, cr.Spec.ForProvider.Body, cr.Spec.ForProvider.Headers, cr.Spec.ForProvider.InsecureSkipTLSVerify)
+		cr.Spec.ForProvider.URL, body, cr.Spec.ForProvider.Headers, cr.Spec.ForProvider.InsecureSkipTLSVerify)
 
 	res := details.HttpResponse
 	resource := &utils.RequestResource{
@@ -197,7 +201,8 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequ
 			resource.SetError(errors.New("Response does not match the expected format, retries limit "+fmt.Sprint(limit))), resource.SetRequestDetails())
 	}
 
-	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetBody(), resource.SetSynced(), resource.SetRequestDetails())
+	//return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(),  resource.SetBody(),  resource.SetRequestDetails())
+	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetSynced(), resource.SetBody(), resource.SetRequestDetails())
 }
 
 func (c *external) isResponseAsExpected(cr *v1alpha1.DisposableRequest, res httpClient.HttpResponse) (bool, error) {
@@ -226,6 +231,7 @@ func (c *external) isResponseAsExpected(cr *v1alpha1.DisposableRequest, res http
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
+	c.logger.Debug("Create DisposableRequest called.")
 	cr, ok := mg.(*v1alpha1.DisposableRequest)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotDisposableRequest)
@@ -239,6 +245,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+	c.logger.Debug("Update DisposableRequest called.")
 	cr, ok := mg.(*v1alpha1.DisposableRequest)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotDisposableRequest)
@@ -252,5 +259,6 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Delete(_ context.Context, _ resource.Managed) error {
+	c.logger.Debug("Delete DisposableRequest called.")
 	return nil
 }

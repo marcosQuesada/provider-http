@@ -20,6 +20,7 @@ import (
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
@@ -33,8 +34,11 @@ type DisposableRequestParameters struct {
 	Method string `json:"method"`
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.headers' is immutable"
 	Headers map[string][]string `json:"headers,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.body' is immutable"
-	Body string `json:"body,omitempty"`
+	//// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.body' is immutable"
+	//Body string `json:"body,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Body runtime.RawExtension `json:"body,omitempty"`
 
 	WaitTimeout *metav1.Duration `json:"waitTimeout,omitempty"`
 
@@ -58,16 +62,21 @@ type DisposableRequestSpec struct {
 }
 
 type Response struct {
-	StatusCode int                 `json:"statusCode,omitempty"`
-	Body       string              `json:"body,omitempty"`
-	Headers    map[string][]string `json:"headers,omitempty"`
+	StatusCode int `json:"statusCode,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Body    runtime.RawExtension `json:"body,omitempty"`
+	RawBody string               `json:"raw-body"`
+	Headers map[string][]string  `json:"headers,omitempty"`
 }
 
 type Mapping struct {
-	Method  string              `json:"method"`
-	Body    string              `json:"body,omitempty"`
-	URL     string              `json:"url"`
-	Headers map[string][]string `json:"headers,omitempty"`
+	Method string `json:"method"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Body    runtime.RawExtension `json:"body,omitempty"`
+	URL     string               `json:"url"`
+	Headers map[string][]string  `json:"headers,omitempty"`
 }
 
 // A DisposableRequestStatus represents the observed state of a DisposableRequest.

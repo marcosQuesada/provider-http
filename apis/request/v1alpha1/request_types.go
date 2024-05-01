@@ -72,78 +72,6 @@ type Payload struct {
 	Body runtime.RawExtension `json:"body,omitempty"`
 }
 
-// A RequestSpec defines the desired state of a Request.
-type RequestSpec struct {
-	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       RequestParameters `json:"forProvider"`
-	References        []Reference       `json:"references,omitempty"`
-	Readiness         Readiness         `json:"readiness,omitempty"`
-}
-
-// RequestObservation are the observable fields of a Request.
-type Response struct {
-	Headers map[string][]string `json:"headers,omitempty"`
-
-	// +kubebuilder:validation:Schemaless
-	// +kubebuilder:pruning:PreserveUnknownFields
-	Body runtime.RawExtension `json:"body,omitempty"`
-
-	StatusCode int `json:"statusCode,omitempty"`
-}
-
-// A RequestStatus represents the observed state of a Request.
-type RequestStatus struct {
-	xpv1.ResourceStatus `json:",inline"`
-	Response            Response `json:"response,omitempty"`
-	Cache               Cache    `json:"cache,omitempty"`
-	Failed              int32    `json:"failed,omitempty"`
-	Error               string   `json:"error,omitempty"`
-	RequestDetails      Mapping  `json:"requestDetails,omitempty"`
-}
-
-type Cache struct {
-	LastUpdated string   `json:"lastUpdated,omitempty"`
-	Response    Response `json:"response,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// A Request is an example API type.
-// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
-// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,http}
-type Request struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   RequestSpec   `json:"spec"`
-	Status RequestStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// RequestList contains a list of Request
-type RequestList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Request `json:"items"`
-}
-
-// Request type metadata.
-var (
-	RequestKind             = reflect.TypeOf(Request{}).Name()
-	RequestGroupKind        = schema.GroupKind{Group: Group, Kind: RequestKind}.String()
-	RequestKindAPIVersion   = RequestKind + "." + SchemeGroupVersion.String()
-	RequestGroupVersionKind = SchemeGroupVersion.WithKind(RequestKind)
-)
-
-func init() {
-	SchemeBuilder.Register(&Request{}, &RequestList{})
-}
-
 // DependsOn refers to an object by Name, Kind, APIVersion, etc. It is used to
 // reference other Object or arbitrary Kubernetes resource which is either
 // cluster or namespace scoped.
@@ -161,6 +89,9 @@ type DependsOn struct {
 	// Namespace of the referenced object.
 	// +optional
 	Namespace string `json:"namespace,omitempty"`
+
+	// +optional
+	Condition string `json:"condition,omitempty"`
 }
 
 // PatchesFrom refers to an object by Name, Kind, APIVersion, etc., and patch
@@ -214,6 +145,78 @@ type Readiness struct {
 	// +kubebuilder:validation:Enum=SuccessfulCreate;DeriveFromObject;AllTrue
 	// +kubebuilder:default=SuccessfulCreate
 	Policy ReadinessPolicy `json:"policy,omitempty"`
+}
+
+// A RequestSpec defines the desired state of a Request.
+type RequestSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       RequestParameters `json:"forProvider"`
+	References        []Reference       `json:"references,omitempty"`
+	Readiness         Readiness         `json:"readiness,omitempty"`
+}
+
+// RequestObservation are the observable fields of a Request.
+type Response struct {
+	Headers map[string][]string `json:"headers,omitempty"`
+
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Body       runtime.RawExtension `json:"body,omitempty"`
+	RawBody    string               `json:"rawBody"`
+	StatusCode int                  `json:"statusCode,omitempty"`
+}
+
+// A RequestStatus represents the observed state of a Request.
+type RequestStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	Response            Response `json:"response,omitempty"`
+	Cache               Cache    `json:"cache,omitempty"`
+	Failed              int32    `json:"failed,omitempty"`
+	Error               string   `json:"error,omitempty"`
+	RequestDetails      Mapping  `json:"requestDetails,omitempty"`
+}
+
+type Cache struct {
+	LastUpdated string   `json:"lastUpdated,omitempty"`
+	Response    Response `json:"response,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A Request is an example API type.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,http}
+type Request struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   RequestSpec   `json:"spec"`
+	Status RequestStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// RequestList contains a list of Request
+type RequestList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Request `json:"items"`
+}
+
+// Request type metadata.
+var (
+	RequestKind             = reflect.TypeOf(Request{}).Name()
+	RequestGroupKind        = schema.GroupKind{Group: Group, Kind: RequestKind}.String()
+	RequestKindAPIVersion   = RequestKind + "." + SchemeGroupVersion.String()
+	RequestGroupVersionKind = SchemeGroupVersion.WithKind(RequestKind)
+)
+
+func init() {
+	SchemeBuilder.Register(&Request{}, &RequestList{})
 }
 
 // ApplyFromFieldPathPatch patches the "to" resource, using a source field

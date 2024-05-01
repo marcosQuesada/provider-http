@@ -1,21 +1,45 @@
 apiVersion: http.crossplane.io/v1alpha1
+kind: DisposableRequest
+metadata:
+  name: auth-request
+  namespace: default
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+#    expectedResponse: '.StatusCode == 200' # @TODO: Improve syntax and SRC
+#    expectedResponse: '.Body.token != ""'
+    insecureSkipTLSVerify: true
+    waitTimeout: 5m
+    rollbackRetriesLimit: 5
+    url:  http://127.0.0.1:8081/api/v1/auth
+    method: GET
+#    body: ""
+    headers:
+      Content-Type:
+        - "application/json"
+  providerConfigRef:
+    name: http-conf
+---
+apiVersion: http.crossplane.io/v1alpha1
 kind: Request
 metadata:
-  name: xxx-request
+  name: exec-request
 spec:
   references:
     - dependsOn:
-        apiVersion: v1
-        kind: ConfigMap
-        name: foobarx
+        apiVersion: http.crossplane.io/v1alpha1
+        kind: DisposableRequest
+        name: auth-request
         namespace: default
-    - patchesFrom:
-        apiVersion: v1
-        kind: ConfigMap
-        name: foobarx
+        condition: ".status.response.statusCode == 200"
+      patchesFrom:
+        apiVersion: http.crossplane.io/v1alpha1
+        kind: DisposableRequest
+        name: auth-request
         namespace: default
-        fieldPath: data.auth
+        fieldPath: status.response.body.token
       toFieldPath: spec.forProvider.headers.Authorization[0]
+    # Patching from resource that will always be there
     - patchesFrom:
         apiVersion: v1
         kind: ConfigMap

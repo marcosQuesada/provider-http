@@ -24,9 +24,9 @@ type client struct {
 }
 
 type HttpResponse struct {
-	Body       string
-	Headers    map[string][]string
-	StatusCode int
+	Body       string              `json:"Body"`
+	Headers    map[string][]string `json:"headers"`
+	StatusCode int                 `json:"StatusCode"`
 }
 
 type HttpRequest struct {

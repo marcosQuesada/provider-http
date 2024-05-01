@@ -390,6 +390,8 @@ spec:
                           default: kubernetes.crossplane.io/v1alpha1
                           description: APIVersion of the referenced object.
                           type: string
+                        condition:
+                          type: string
                         kind:
                           default: Object
                           description: Kind of the referenced object.
@@ -411,6 +413,8 @@ spec:
                         apiVersion:
                           default: kubernetes.crossplane.io/v1alpha1
                           description: APIVersion of the referenced object.
+                          type: string
+                        condition:
                           type: string
                         fieldPath:
                           description: FieldPath is the path of the field on the resource
@@ -480,8 +484,12 @@ spec:
                             type: string
                           type: array
                         type: object
+                      rawBody:
+                        type: string
                       statusCode:
                         type: integer
+                    required:
+                    - rawBody
                     type: object
                 type: object
               conditions:
@@ -559,8 +567,12 @@ spec:
                         type: string
                       type: array
                     type: object
+                  rawBody:
+                    type: string
                   statusCode:
                     type: integer
+                required:
+                - rawBody
                 type: object
             type: object
         required:

@@ -70,10 +70,10 @@ spec:
                   of a DisposableRequest.
                 properties:
                   body:
-                    type: string
-                    x-kubernetes-validations:
-                    - message: Field 'forProvider.body' is immutable
-                      rule: self == oldSelf
+                    description: // +kubebuilder:validation:XValidation:rule="self
+                      == oldSelf",message="Field 'forProvider.body' is immutable"
+                      Body string `json:"body,omitempty"`
+                    x-kubernetes-preserve-unknown-fields: true
                   expectedResponse:
                     description: 'ExpectedResponse is a jq filter expression used
                       to evaluate the HTTP response and determine if it matches the
@@ -346,7 +346,7 @@ spec:
               requestDetails:
                 properties:
                   body:
-                    type: string
+                    x-kubernetes-preserve-unknown-fields: true
                   headers:
                     additionalProperties:
                       items:
@@ -364,15 +364,19 @@ spec:
               response:
                 properties:
                   body:
-                    type: string
+                    x-kubernetes-preserve-unknown-fields: true
                   headers:
                     additionalProperties:
                       items:
                         type: string
                       type: array
                     type: object
+                  raw-body:
+                    type: string
                   statusCode:
                     type: integer
+                required:
+                - raw-body
                 type: object
               synced:
                 type: boolean
