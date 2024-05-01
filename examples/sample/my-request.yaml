@@ -44,28 +44,24 @@ spec:
       create:
         method: "POST"
         url: .payload.baseUrl
-        body: |
-          {
-            "id": .payload.body.id,
-            "name": .payload.body.name, 
-            "color": .payload.body.color,
-            "price": .payload.body.price,
-            "state": .payload.body.state
-          }
+        body:
+          id: .payload.body.id
+          name: .payload.body.name
+          color: .payload.body.color
+          price: .payload.body.price
+          state: .payload.body.state
       get:
         method: "GET"
         url: (.payload.baseUrl + "/" + .response.body.name)
       update:
         method: "PUT"
         url: (.payload.baseUrl + "/" + .response.body.name)
-        body: |
-          {
-            "id": .payload.body.id,
-            "name": .payload.body.name, 
-            "color": .payload.body.color,
-            "price": .payload.body.price,
-            "state": .payload.body.state
-          }
+        body:
+          id: .payload.body.id
+          name: .payload.body.name
+          color: .payload.body.color
+          price: .payload.body.price
+          state: .payload.body.state
       delete:
         method: "DELETE"
         url: (.payload.baseUrl + "/" + .response.body.name)

@@ -1,6 +1,8 @@
 package v1alpha1
 
-import "time"
+import (
+	"time"
+)
 
 func (d *Request) SetStatusCode(statusCode int) {
 	d.Status.Response.StatusCode = statusCode
@@ -11,8 +13,10 @@ func (d *Request) SetHeaders(headers map[string][]string) {
 }
 
 func (d *Request) SetBody(body string) {
-	d.Status.Response.Body = body
-	d.Status.Response.BodyObject.Raw = []byte(body)
+	d.Status.Response.Body.Raw = []byte("{}")
+	if len(body) > 0 {
+		d.Status.Response.Body.Raw = []byte(body)
+	}
 }
 
 func (d *Request) SetError(err error) {
@@ -28,15 +32,21 @@ func (d *Request) ResetFailures() {
 }
 
 func (d *Request) SetRequestDetails(url, method, body string, headers map[string][]string) {
-	d.Status.RequestDetails.Body = body
 	d.Status.RequestDetails.URL = url
 	d.Status.RequestDetails.Headers = headers
 	d.Status.RequestDetails.Method = method
+	d.Status.RequestDetails.Body.Raw = []byte("{}")
+	if len(body) > 0 {
+		d.Status.RequestDetails.Body.Raw = []byte(body)
+	}
 }
 
 func (d *Request) SetCache(statusCode int, headers map[string][]string, body string) {
 	d.Status.Cache.Response.StatusCode = statusCode
 	d.Status.Cache.Response.Headers = headers
-	d.Status.Cache.Response.Body = body
+	d.Status.Cache.Response.Body.Raw = []byte("{}")
+	if len(body) > 0 {
+		d.Status.Cache.Response.Body.Raw = []byte(body)
+	}
 	d.Status.Cache.LastUpdated = time.Now().UTC().Format(time.RFC3339)
 }

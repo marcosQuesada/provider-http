@@ -86,7 +86,7 @@ spec:
                             description: '@Deprecated'
                             type: string
                           body:
-                            type: string
+                            x-kubernetes-preserve-unknown-fields: true
                           headers:
                             additionalProperties:
                               items:
@@ -112,7 +112,7 @@ spec:
                             description: '@Deprecated'
                             type: string
                           body:
-                            type: string
+                            x-kubernetes-preserve-unknown-fields: true
                           headers:
                             additionalProperties:
                               items:
@@ -138,7 +138,7 @@ spec:
                             description: '@Deprecated'
                             type: string
                           body:
-                            type: string
+                            x-kubernetes-preserve-unknown-fields: true
                           headers:
                             additionalProperties:
                               items:
@@ -164,7 +164,7 @@ spec:
                             description: '@Deprecated'
                             type: string
                           body:
-                            type: string
+                            x-kubernetes-preserve-unknown-fields: true
                           headers:
                             additionalProperties:
                               items:
@@ -473,8 +473,6 @@ spec:
                       Request.
                     properties:
                       body:
-                        type: string
-                      body-object:
                         x-kubernetes-preserve-unknown-fields: true
                       headers:
                         additionalProperties:
@@ -530,7 +528,7 @@ spec:
                     description: '@Deprecated'
                     type: string
                   body:
-                    type: string
+                    x-kubernetes-preserve-unknown-fields: true
                   headers:
                     additionalProperties:
                       items:
@@ -554,8 +552,6 @@ spec:
                 description: RequestObservation are the observable fields of a Request.
                 properties:
                   body:
-                    type: string
-                  body-object:
                     x-kubernetes-preserve-unknown-fields: true
                   headers:
                     additionalProperties:

@@ -76,7 +76,7 @@ func (c *external) isUpToDate(ctx context.Context, cr *v1alpha1.Request) (Observ
 }
 
 func (c *external) isObjectValidForObservation(cr *v1alpha1.Request) bool {
-	return cr.Status.Response.Body != "" &&
+	return len(cr.Status.Response.Body.Raw) > 0 &&
 		!(cr.Status.RequestDetails.Method == http.MethodPost && utils.IsHTTPError(cr.Status.Response.StatusCode))
 }
 

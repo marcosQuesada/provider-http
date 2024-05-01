@@ -34,11 +34,12 @@ func GenerateRequestDetails(methodMapping v1alpha1.Mapping, forProvider v1alpha1
 		return RequestDetails{}, errors.Errorf(utils.ErrInvalidURL, url), false
 	}
 
-	body, err := generateBody(methodMapping.Body, jqObject)
+	body, err := generateBody(string(methodMapping.Body.Raw), jqObject)
 	if err != nil {
 		return RequestDetails{}, err, false
 	}
 
+	// @TODO: Clean
 	//bodyObject := forProvider.Payload.Body
 	//if len(bodyObject.Raw) > 0 && len(body) > 0 {
 	//	body, err = mergeBody([]byte(body), bodyObject.Raw)

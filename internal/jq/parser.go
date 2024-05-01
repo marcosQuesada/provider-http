@@ -2,8 +2,10 @@ package jq
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
+	"github.com/crossplane-contrib/provider-http/internal/json"
 	"github.com/pkg/errors"
 
 	"github.com/itchyny/gojq"
@@ -42,6 +44,11 @@ func runJQQuery(jqQuery string, obj interface{}) (interface{}, error) {
 }
 
 func ParseString(jqQuery string, obj interface{}) (string, error) {
+
+	if json.IsJSONString(jqQuery) {
+		jqQuery = strings.ReplaceAll(jqQuery, "\"", "")
+	}
+
 	queryRes, err := runJQQuery(jqQuery, obj)
 	if err != nil {
 		return "", err
@@ -70,6 +77,9 @@ func ParseBool(jqQuery string, obj interface{}) (bool, error) {
 }
 
 func ParseMapInterface(jqQuery string, obj interface{}) (map[string]interface{}, error) {
+	if json.IsJSONString(jqQuery) {
+		jqQuery = strings.ReplaceAll(jqQuery, "\"", "")
+	}
 	queryRes, err := runJQQuery(jqQuery, obj)
 	if err != nil {
 		return nil, err

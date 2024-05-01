@@ -29,7 +29,7 @@ import (
 
 // RequestParameters are the configurable fields of a Request.
 type RequestParameters struct {
-	Mappings Mappings            `json:"mappings"`
+	Mappings Mappings            `json:"mappings"` // @TODO: Breaking change
 	Payload  Payload             `json:"payload"`
 	Headers  map[string][]string `json:"headers,omitempty"`
 
@@ -52,10 +52,12 @@ type Mappings struct {
 
 type Mapping struct {
 	// +kubebuilder:validation:Enum=POST;GET;PUT;DELETE
-	Method  string              `json:"method"`
-	Body    string              `json:"body,omitempty"`
-	URL     string              `json:"url"`
-	Headers map[string][]string `json:"headers,omitempty"`
+	Method string `json:"method"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Body    runtime.RawExtension `json:"body,omitempty"`
+	URL     string               `json:"url"`
+	Headers map[string][]string  `json:"headers,omitempty"`
 
 	// @Deprecated
 	// +optional
@@ -81,11 +83,10 @@ type RequestSpec struct {
 // RequestObservation are the observable fields of a Request.
 type Response struct {
 	Headers map[string][]string `json:"headers,omitempty"`
-	Body    string              `json:"body,omitempty"`
 
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
-	BodyObject runtime.RawExtension `json:"body-object,omitempty"`
+	Body runtime.RawExtension `json:"body,omitempty"`
 
 	StatusCode int `json:"statusCode,omitempty"`
 }
