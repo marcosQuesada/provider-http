@@ -8,6 +8,7 @@ import (
 	v1alpha1_request "github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 	httpClient "github.com/crossplane-contrib/provider-http/internal/clients/http"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
@@ -20,13 +21,13 @@ var (
 var (
 	testPostMapping = v1alpha1_request.Mapping{
 		Method: "POST",
-		Body:   "{ username: .payload.body.username, email: .payload.body.email }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: .payload.body.username, email: .payload.body.email }")},
 		URL:    ".payload.baseUrl",
 	}
 
 	testPutMapping = v1alpha1_request.Mapping{
 		Method: "PUT",
-		Body:   "{ username: \"john_doe_new_username\" }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: \"john_doe_new_username\" }")},
 		URL:    "(.payload.baseUrl + \"/\" + .response.body.id)",
 	}
 
@@ -43,7 +44,7 @@ var (
 
 var (
 	testDisposableForProvider = v1alpha1_disposable.DisposableRequestParameters{
-		Body:   "{\"key1\": \"value1\"}",
+		Body:   runtime.RawExtension{Raw: []byte("{\"key1\": \"value1\"}")},
 		URL:    "http://example",
 		Method: "GET",
 	}
@@ -70,14 +71,14 @@ var (
 var (
 	testRequestForProvider = v1alpha1_request.RequestParameters{
 		Payload: v1alpha1_request.Payload{
-			Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+			Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 			BaseUrl: "https://api.example.com/users",
 		},
-		Mappings: []v1alpha1_request.Mapping{
-			testPostMapping,
-			testGetMapping,
-			testPutMapping,
-			testDeleteMapping,
+		Mappings: v1alpha1_request.Mappings{
+			&testPostMapping,
+			&testGetMapping,
+			&testPutMapping,
+			&testDeleteMapping,
 		},
 	}
 

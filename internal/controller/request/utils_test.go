@@ -5,18 +5,19 @@ import (
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
 	testPostMapping = v1alpha1.Mapping{
 		Method: "POST",
-		Body:   "{ username: .payload.body.username, email: .payload.body.email }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: .payload.body.username, email: .payload.body.email }")},
 		URL:    ".payload.baseUrl",
 	}
 
 	testPutMapping = v1alpha1.Mapping{
 		Method: "PUT",
-		Body:   "{ username: \"john_doe_new_username\" }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: \"john_doe_new_username\" }")},
 		URL:    "(.payload.baseUrl + \"/\" + .response.body.id)",
 	}
 
@@ -31,7 +32,7 @@ var (
 	}
 )
 
-func Test_getMappingByMethod(t *testing.T) {
+func Test_getMappingByMethod(t *testing.T) { // @TODO: Check it out
 	type args struct {
 		requestParams *v1alpha1.RequestParameters
 		method        Action
@@ -48,13 +49,13 @@ func Test_getMappingByMethod(t *testing.T) {
 			args: args{
 				requestParams: &v1alpha1.RequestParameters{
 					Payload: v1alpha1.Payload{
-						Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+						Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 						BaseUrl: "https://api.example.com/users",
 					},
-					Mappings: []v1alpha1.Mapping{
-						testGetMapping,
-						testPutMapping,
-						testDeleteMapping,
+					Mappings: v1alpha1.Mappings{
+						Get:    &testGetMapping,
+						Update: &testPutMapping,
+						Delete: &testDeleteMapping,
 					},
 				},
 				method: "POST",
@@ -68,14 +69,14 @@ func Test_getMappingByMethod(t *testing.T) {
 			args: args{
 				requestParams: &v1alpha1.RequestParameters{
 					Payload: v1alpha1.Payload{
-						Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+						Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 						BaseUrl: "https://api.example.com/users",
 					},
-					Mappings: []v1alpha1.Mapping{
-						testPostMapping,
-						testGetMapping,
-						testPutMapping,
-						testDeleteMapping,
+					Mappings: v1alpha1.Mappings{
+						Create: &testPostMapping,
+						Get:    &testGetMapping,
+						Update: &testPutMapping,
+						Delete: &testDeleteMapping,
 					},
 				},
 				method: "POST",

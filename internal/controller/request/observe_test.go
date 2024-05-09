@@ -11,6 +11,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,7 +45,7 @@ func Test_isUpToDate(t *testing.T) {
 					MockStatusUpdate: test.NewMockSubResourceUpdateFn(nil),
 				},
 				mg: httpRequest(func(r *v1alpha1.Request) {
-					r.Status.Response.Body = ""
+					r.Status.Response.Body = runtime.RawExtension{Raw: []byte("{}")}
 				}),
 			},
 			want: want{
@@ -103,7 +104,7 @@ func Test_isUpToDate(t *testing.T) {
 					MockStatusUpdate: test.NewMockSubResourceUpdateFn(nil),
 				},
 				mg: httpRequest(func(r *v1alpha1.Request) {
-					r.Status.Response.Body = `{"username":"john_doe_new_username"}`
+					r.Status.Response.Body = runtime.RawExtension{Raw: []byte(`{"username":"john_doe_new_username"}`)}
 				}),
 			},
 			want: want{
@@ -126,7 +127,7 @@ func Test_isUpToDate(t *testing.T) {
 					MockStatusUpdate: test.NewMockSubResourceUpdateFn(nil),
 				},
 				mg: httpRequest(func(r *v1alpha1.Request) {
-					r.Status.Response.Body = `{"username":"john_doe_new_username"}`
+					r.Status.Response.Body = runtime.RawExtension{Raw: []byte(`{"username":"john_doe_new_username"}`)}
 				}),
 			},
 			want: want{
@@ -160,7 +161,7 @@ func Test_isUpToDate(t *testing.T) {
 					MockStatusUpdate: test.NewMockSubResourceUpdateFn(nil),
 				},
 				mg: httpRequest(func(r *v1alpha1.Request) {
-					r.Status.Response.Body = `{"username":"john_doe_new_username"}`
+					r.Status.Response.Body = runtime.RawExtension{Raw: []byte(`{"username":"john_doe_new_username"}`)}
 					r.Status.Response.StatusCode = 200
 				}),
 			},

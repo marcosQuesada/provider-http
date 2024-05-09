@@ -6,6 +6,7 @@ import (
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 	httpClient "github.com/crossplane-contrib/provider-http/internal/clients/http"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var testHeaders = map[string][]string{
@@ -36,7 +37,7 @@ func Test_HttpResponseToV1alpha1Response(t *testing.T) {
 			},
 			want: want{
 				result: v1alpha1.Response{
-					Body:       `{"email":"john.doe@example.com","name":"john_doe"}`,
+					Body:       runtime.RawExtension{Raw: []byte(`{"email":"john.doe@example.com","name":"john_doe"}`)},
 					Headers:    testHeaders,
 					StatusCode: 200,
 				},

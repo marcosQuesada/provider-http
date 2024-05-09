@@ -2,6 +2,7 @@ package request
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -34,14 +35,14 @@ const (
 var (
 	testForProvider = v1alpha1.RequestParameters{
 		Payload: v1alpha1.Payload{
-			Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+			Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 			BaseUrl: "https://api.example.com/users",
 		},
-		Mappings: []v1alpha1.Mapping{
-			testPostMapping,
-			testGetMapping,
-			testPutMapping,
-			testDeleteMapping,
+		Mappings: v1alpha1.Mappings{
+			Create: &testPostMapping,
+			Get:    &testGetMapping,
+			Update: &testPutMapping,
+			Delete: &testDeleteMapping,
 		},
 	}
 )
@@ -334,7 +335,6 @@ func Test_httpExternal_Delete(t *testing.T) {
 }
 
 func TestPatchFieldValueToObject(t *testing.T) {
-
 	to := &v1alpha1.Request{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "http.crossplane.io/v1alpha1",
@@ -354,10 +354,7 @@ func TestPatchFieldValueToObject(t *testing.T) {
 				},
 				Payload: v1alpha1.Payload{
 					BaseUrl: "http://127.0.0.1:8081/api/v1/pets",
-					Body:    "{ \"id\": 1112, \"name\": \"fake-simple-name-2\", \"color\": \"simple-color-2\", \"price\": 123219, \"state\": \"foo-state-2\" }",
-					BodyObject: runtime.RawExtension{
-						Raw: []byte(`{"foo":"bar", "zoom":"xxxx"}`),
-					},
+					Body:    runtime.RawExtension{Raw: []byte("{ \"id\": 1112, \"name\": \"fake-simple-name-2\", \"color\": \"simple-color-2\", \"price\": 123219, \"state\": \"foo-state-2\" }")},
 				},
 				Headers: map[string][]string{
 					"Authorization": []string{"Basic BASE64_ENCODED_USER_CREDENTIALS"},
@@ -374,10 +371,20 @@ func TestPatchFieldValueToObject(t *testing.T) {
 	err := v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
 
+	require.Len(t, to.Spec.ForProvider.Headers["Authorization"], 1)
+	require.Equal(t, value, to.Spec.ForProvider.Headers["Authorization"][0])
+
 	path = "spec.forProvider.payload.body.foo"
 	value = "2423423423"
 	err = v1alpha1.PatchFieldValueToObject(path, value, to)
 	require.NoError(t, err)
+
+	rsp := map[string]any{}
+	err = json.Unmarshal(to.Spec.ForProvider.Payload.Body.Raw, &rsp)
+	require.NoError(t, err)
+	v, ok := rsp["foo"]
+	require.True(t, ok)
+	require.Equal(t, value, v)
 
 }
 

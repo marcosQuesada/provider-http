@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
 	httpClient "github.com/crossplane-contrib/provider-http/internal/clients/http"
@@ -34,13 +35,13 @@ const (
 var (
 	testPostMapping = v1alpha1.Mapping{
 		Method: "POST",
-		Body:   "{ username: .payload.body.username, email: .payload.body.email }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: .payload.body.username, email: .payload.body.email }")},
 		URL:    ".payload.baseUrl",
 	}
 
 	testPutMapping = v1alpha1.Mapping{
 		Method: "PUT",
-		Body:   "{ username: \"john_doe_new_username\" }",
+		Body:   runtime.RawExtension{Raw: []byte("{ username: \"john_doe_new_username\" }")},
 		URL:    "(.payload.baseUrl + \"/\" + .response.body.id)",
 	}
 
@@ -58,14 +59,14 @@ var (
 var (
 	testForProvider = v1alpha1.RequestParameters{
 		Payload: v1alpha1.Payload{
-			Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+			Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 			BaseUrl: "https://api.example.com/users",
 		},
-		Mappings: []v1alpha1.Mapping{
-			testPostMapping,
-			testGetMapping,
-			testPutMapping,
-			testDeleteMapping,
+		Mappings: v1alpha1.Mappings{
+			&testPostMapping,
+			&testGetMapping,
+			&testPutMapping,
+			&testDeleteMapping,
 		},
 	}
 )
@@ -195,7 +196,7 @@ func Test_SetRequestStatus(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			t.Skip()
-			r, _ := NewStatusHandler(context.Background(), "", tc.args.cr, tc.args.requestDetails, tc.args.err, tc.args.localKube, logging.NewNopLogger())
+			r, _ := NewStatusHandler(context.Background(), tc.args.cr, tc.args.requestDetails, tc.args.err, tc.args.localKube, logging.NewNopLogger())
 			if tc.args.isSynced {
 				r.ResetFailures()
 			}
