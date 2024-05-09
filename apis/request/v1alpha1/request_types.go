@@ -51,7 +51,6 @@ type Mappings struct {
 }
 
 type Mapping struct {
-	// +kubebuilder:validation:Enum=POST;GET;PUT;DELETE
 	Method string `json:"method"`
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields

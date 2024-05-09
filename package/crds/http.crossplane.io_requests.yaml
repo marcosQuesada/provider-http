@@ -94,11 +94,6 @@ spec:
                               type: array
                             type: object
                           method:
-                            enum:
-                            - POST
-                            - GET
-                            - PUT
-                            - DELETE
                             type: string
                           url:
                             type: string
@@ -120,11 +115,6 @@ spec:
                               type: array
                             type: object
                           method:
-                            enum:
-                            - POST
-                            - GET
-                            - PUT
-                            - DELETE
                             type: string
                           url:
                             type: string
@@ -146,11 +136,6 @@ spec:
                               type: array
                             type: object
                           method:
-                            enum:
-                            - POST
-                            - GET
-                            - PUT
-                            - DELETE
                             type: string
                           url:
                             type: string
@@ -172,11 +157,6 @@ spec:
                               type: array
                             type: object
                           method:
-                            enum:
-                            - POST
-                            - GET
-                            - PUT
-                            - DELETE
                             type: string
                           url:
                             type: string
@@ -544,11 +524,6 @@ spec:
                       type: array
                     type: object
                   method:
-                    enum:
-                    - POST
-                    - GET
-                    - PUT
-                    - DELETE
                     type: string
                   url:
                     type: string
