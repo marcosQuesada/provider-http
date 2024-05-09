@@ -1,12 +1,18 @@
 package requestgen
 
 import (
+	"encoding/json"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/crossplane-contrib/provider-http/apis/request/v1alpha1"
+	"github.com/crossplane-contrib/provider-http/internal/controller/request/requestprocessing"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var testHeaders = map[string][]string{
@@ -23,14 +29,15 @@ var testHeaders2 = map[string][]string{
 var (
 	testPostMapping = v1alpha1.Mapping{
 		Method:  "POST",
-		Body:    "{ username: .payload.body.username, email: .payload.body.email }",
+		Body:    runtime.RawExtension{Raw: []byte(`{"username": ".payload.body.username", "email": ".payload.body.email"}`)},
 		URL:     ".payload.baseUrl",
 		Headers: testHeaders,
 	}
 
 	testPutMapping = v1alpha1.Mapping{
-		Method:  "PUT",
-		Body:    "{ username: \"john_doe_new_username\" }",
+		Method: "PUT",
+		Body:   runtime.RawExtension{Raw: []byte(`{"username": "john_doe_new_username" }`)},
+		//Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"\\x34\\john_doe_new_username\\x34\\\" }")},
 		URL:     "(.payload.baseUrl + \"/\" + .response.body.id)",
 		Headers: testHeaders,
 	}
@@ -49,15 +56,16 @@ var (
 var (
 	testForProvider = v1alpha1.RequestParameters{
 		Payload: v1alpha1.Payload{
-			Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+			Body:    runtime.RawExtension{Raw: []byte(`{"username": "john_doe", "email": "john.doe@example.com"}`)},
 			BaseUrl: "https://api.example.com/users",
 		},
-		Mappings: []v1alpha1.Mapping{
-			testPostMapping,
-			testGetMapping,
-			testPutMapping,
-			testDeleteMapping,
+		Mappings: v1alpha1.Mappings{
+			&testPostMapping,
+			&testGetMapping,
+			&testPutMapping,
+			&testDeleteMapping,
 		},
+		Headers: map[string][]string{},
 	}
 )
 
@@ -100,7 +108,7 @@ func Test_GenerateRequestDetails(t *testing.T) {
 				forProvider:   testForProvider,
 				response: v1alpha1.Response{
 					StatusCode: 200,
-					Body:       `{"id":"123","username":"john_doe"}`,
+					Body:       runtime.RawExtension{Raw: []byte(`{"id":"123","username":"john_doe"}`)},
 					Headers:    testHeaders,
 				},
 				logger: logging.NewNopLogger(),
@@ -121,7 +129,7 @@ func Test_GenerateRequestDetails(t *testing.T) {
 				forProvider:   testForProvider,
 				response: v1alpha1.Response{
 					StatusCode: 200,
-					Body:       `{"id":"123","username":"john_doe"}`,
+					Body:       runtime.RawExtension{Raw: []byte(`{"id":"123","username":"john_doe"}`)},
 					Headers:    testHeaders,
 				},
 				logger: logging.NewNopLogger(),
@@ -141,7 +149,7 @@ func Test_GenerateRequestDetails(t *testing.T) {
 				forProvider:   testForProvider,
 				response: v1alpha1.Response{
 					StatusCode: 200,
-					Body:       `{"id":"123","username":"john_doe"}`,
+					Body:       runtime.RawExtension{Raw: []byte(`{"id":"123","username":"john_doe"}`)},
 					Headers:    testHeaders,
 				},
 				logger: logging.NewNopLogger(),
@@ -323,7 +331,7 @@ func Test_generateRequestObject(t *testing.T) {
 				forProvider: testForProvider,
 				response: v1alpha1.Response{
 					StatusCode: 200,
-					Body:       `{"id": "123"}`,
+					Body:       runtime.RawExtension{Raw: []byte(`{"id": "123"}`)},
 					Headers:    nil,
 				},
 			},
@@ -381,6 +389,128 @@ func Test_generateRequestObject(t *testing.T) {
 			if diff := cmp.Diff(tc.want.result, got); diff != "" {
 				t.Fatalf("generateRequestObject(...): -want result, +got result: %s", diff)
 			}
+		})
+	}
+}
+func TestEmbeddedRawExtensionMarshal(t *testing.T) {
+	type test struct {
+		Ext runtime.RawExtension
+	}
+
+	extension := test{Ext: runtime.RawExtension{Raw: []byte(`{foo:{"foo":"bar"}`)}}
+	data, err := json.Marshal(extension)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != `{"Ext":{"foo":"bar"}}` {
+		t.Errorf("unexpected data: %s", string(data))
+	}
+}
+
+func TestOriginalBodyMappers(t *testing.T) {
+	mappingBody := "{ username: .payload.body.username, email: .payload.body.email }"
+	jqQuery := requestprocessing.ConvertStringToJQQuery(mappingBody)
+
+	response := v1alpha1.Response{}
+	jqObject := generateRequestObject(testForProvider, response)
+	body, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
+	require.NoError(t, err)
+
+	require.Equal(t, `{"email":"john.doe@example.com","username":"john_doe"}`, body)
+}
+
+func TestOriginalBodyMappersFromStringKeysAndValuesAsPureJQ(t *testing.T) {
+	mappingBody := `{"username": ".payload.body.username", "email": ".payload.body.email"}`
+
+	mappingBody = strings.ReplaceAll(mappingBody, "\"", "") // @TODO: How to
+	jqQuery := requestprocessing.ConvertStringToJQQuery(mappingBody)
+	response := v1alpha1.Response{}
+	jqObject := generateRequestObject(testForProvider, response)
+	body, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
+	require.NoError(t, err)
+
+	require.Equal(t, `{"email":"john.doe@example.com","username":"john_doe"}`, body)
+}
+
+func TestOriginalBodyMappersFromStringKeysAndValuesAsMixedJQ(t *testing.T) {
+	mappingBody := `{"username": "john_doe_new_username", "email": ".payload.body.email"}`
+
+	mappingBody = strings.ReplaceAll(mappingBody, "\"", "") // @TODO: Initial workaround, not valid for non JQ queries
+	jqQuery := requestprocessing.ConvertStringToJQQuery(mappingBody)
+	response := v1alpha1.Response{}
+	jqObject := generateRequestObject(testForProvider, response)
+	_, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
+	require.Error(t, err)
+}
+
+// Example of mixed JQ values and literals
+func TestOriginalBodyMappersFromStringKeysAndValuesAsMixedJQWorkingWithLiterals(t *testing.T) {
+	mappingBody := `{"username": "john_doe_new_username", "email": .payload.body.email}`
+
+	jqQuery := requestprocessing.ConvertStringToJQQuery(mappingBody)
+	response := v1alpha1.Response{}
+	jqObject := generateRequestObject(testForProvider, response)
+	body, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
+	require.NoError(t, err)
+	require.Equal(t, `{"email":"john.doe@example.com","username":"john_doe_new_username"}`, body)
+}
+
+func TestFromStringKeyValueToJQ(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name                            string
+		args                            args
+		want                            string
+		wantFromStringKeyValueToJQError bool
+		wantApplyJQOnStrError           bool
+	}{
+		{
+			name: "RawExtensionSupportingJQFields",
+			args: args{input: `{"username": "john_doe_new_username", "email": ".payload.body.email"}`},
+			want: `{"email":"john.doe@example.com","username":"john_doe_new_username"}`,
+		},
+		{
+			name: "RawExtensionSupportingNestedJQFields",
+			args: args{input: `{ "username": "john_doe_new_username", "email": {"foo":".payload.body.email"} }`},
+			want: `{"email":{"foo":"john.doe@example.com"},"username":"john_doe_new_username"}`,
+		},
+		{
+			name: "RawExtensionSupportingNestedMultipleJQFields",
+			args: args{input: `{ "username": "john_doe_new_username", "email": {"foo":".payload.body.email", "bar":".payload.body.username"} }`},
+			want: `{"email":{"bar":"john_doe","foo":"john.doe@example.com"},"username":"john_doe_new_username"}`,
+		},
+		{
+			name: "RawExtensionSupportingNestedWithSingleItemArrayJQFields",
+			args: args{input: `{ "username": "john_doe_new_username", "email": [".payload.body.email"] }`},
+			want: `{"email":["john.doe@example.com"],"username":"john_doe_new_username"}`,
+		},
+		{
+			name: "RawExtensionSupportingNestedWithArrayJQFields",
+			args: args{input: `{ "username": "john_doe_new_username", "email": [".payload.body.email",".payload.body.username"] }`},
+			want: `{"email":["john.doe@example.com","john_doe"],"username":"john_doe_new_username"}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := FromJSONMapToJQuery(tt.args.input)
+			if tt.wantFromStringKeyValueToJQError != (err != nil) {
+				t.Fatalf("unexpected wantFromStringKeyValueToJQ error, got %v", err)
+			}
+
+			jqQuery := requestprocessing.ConvertStringToJQQuery(result)
+			response := v1alpha1.Response{}
+			jqObject := generateRequestObject(testForProvider, response)
+			got, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
+			if tt.wantApplyJQOnStrError != (err != nil) {
+				t.Fatalf("unexpected wantApplyJQOnStr error, got %v", err)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GenerateRequestDetails() got = %v, want %v", got, tt.want)
+			}
+
 		})
 	}
 }

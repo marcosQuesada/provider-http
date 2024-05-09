@@ -45,9 +45,11 @@ func runJQQuery(jqQuery string, obj interface{}) (interface{}, error) {
 
 func ParseString(jqQuery string, obj interface{}) (string, error) {
 
-	if json.IsJSONString(jqQuery) {
-		jqQuery = strings.ReplaceAll(jqQuery, "\"", "")
-	}
+	//jqQuery = strings.Join(strings.Fields(jqQuery), " ")
+	////ConvertStringToJQQuery
+	//if json.IsJSONString(jqQuery) { // @TODO: THIS, IT WILL NOT WORK ON NON JQ QUERIES
+	//	jqQuery = strings.ReplaceAll(jqQuery, "\"", "")
+	//}
 
 	queryRes, err := runJQQuery(jqQuery, obj)
 	if err != nil {

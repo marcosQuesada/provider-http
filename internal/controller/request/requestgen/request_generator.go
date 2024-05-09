@@ -18,7 +18,7 @@ import (
 
 type RequestDetails struct {
 	Url     string
-	Body    string
+	Body    string // @TODO: What about this ¿?
 	Headers map[string][]string
 }
 
@@ -118,10 +118,14 @@ func generateBody(mappingBody string, jqObject map[string]interface{}) (string, 
 		return "", nil
 	}
 
-	jqQuery := requestprocessing.ConvertStringToJQQuery(mappingBody)
+	jqQuery, err := FromJSONMapToJQuery(requestprocessing.ConvertStringToJQQuery(mappingBody))
+	if err != nil {
+		return "", fmt.Errorf("FromJSONMapToJQuery error %w", err)
+	}
+
 	body, err := requestprocessing.ApplyJQOnStr(jqQuery, jqObject)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("ApplyJQOnStr error %w", err)
 	}
 
 	return body, nil
@@ -135,4 +139,63 @@ func generateHeaders(headers map[string][]string, jqObject map[string]interface{
 	}
 
 	return generatedHeaders, nil
+}
+
+// FromJSONMapToJQuery convert json map[string]any values to JQ query
+func FromJSONMapToJQuery(in string) (string, error) {
+	tmp := map[string]any{}
+	if err := json.Unmarshal([]byte(in), &tmp); err != nil {
+		return "", fmt.Errorf("unable to UnMarshall to map, error %w", err)
+	}
+
+	var sb strings.Builder
+	sb.WriteString("{")
+
+	i := 0
+	for k, v := range tmp {
+		i++
+		sb.WriteString("\"" + k + "\"" + ":")
+
+		parse(v, &sb)
+		if i != len(tmp) {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("}")
+
+	return sb.String(), nil
+}
+
+func parse(val any, res *strings.Builder) {
+	switch v := val.(type) {
+	case int, int64, float64:
+		res.WriteString(fmt.Sprintf("%d, ", v))
+	case string:
+		if strings.HasPrefix(v, ".") {
+			res.WriteString(v)
+			return
+		}
+		res.WriteString("\"" + v + "\"")
+	case []any:
+		res.WriteString("[")
+		for i, a := range v {
+			parse(a, res)
+			if i+1 != len(v) {
+				res.WriteString(", ")
+			}
+		}
+		res.WriteString("]")
+	case map[string]any:
+		res.WriteString("{")
+		i := 0
+		for kv, vv := range v {
+			i++
+			res.WriteString("\"" + kv + "\"" + ": ")
+			parse(vv, res)
+			if i != len(v) {
+				res.WriteString(", ")
+			}
+		}
+		res.WriteString("}")
+	}
 }
