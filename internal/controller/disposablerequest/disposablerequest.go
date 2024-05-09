@@ -142,7 +142,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	cr.Status.SetConditions(xpv1.Available())
 	if err := c.localKube.Status().Update(ctx, cr); err != nil {
-		return managed.ExternalObservation{}, errors.New(errFailedUpdateStatusConditions)
+		return managed.ExternalObservation{}, errors.Wrap(errors.New(errFailedUpdateStatusConditions), err.Error())
 	}
 
 	return managed.ExternalObservation{

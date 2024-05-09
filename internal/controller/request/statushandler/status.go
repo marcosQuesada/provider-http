@@ -117,8 +117,8 @@ func (r *requestStatusHandler) isActionMappingValid(m v1alpha1.Mapping, forProvi
 	response := responseconverter.HttpResponseToV1alpha1Response(r.resource.HttpResponse)
 	requestDetails, err, ok := requestgen.GenerateRequestDetails(m, forProvider, response)
 	if err != nil {
-		//return false, errors.Wrap(err, "unable to generate request details")
 		r.logger.Info("Error on GenerateRequestDetails", "error", err)
+		return false
 	}
 	if !(requestgen.IsRequestValid(requestDetails) && ok) {
 		return false
