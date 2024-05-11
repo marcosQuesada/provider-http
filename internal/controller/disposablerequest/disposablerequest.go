@@ -227,6 +227,9 @@ func (c *external) isResponseAsExpected(cr *v1alpha1.DisposableRequest, res http
 		return false, errors.Errorf(ErrExpectedFormat, err.Error())
 	}
 
+	if !isExpected {
+		c.logger.Info("Disposable Request Expected Response does not match", "expected", cr.Spec.ForProvider.ExpectedResponse, "http response", fmt.Sprintf("%v", res))
+	}
 	return isExpected, nil
 }
 

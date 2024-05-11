@@ -4,16 +4,16 @@ metadata:
   name: auth-request
   namespace: default
 spec:
-  managementPolicies: ["Create", "Observe"]
+  managementPolicies: ["Create", "Observe", "Update"]
   forProvider:
-#    expectedResponse: '.StatusCode == 200' # @TODO: Improve syntax and SRC
+    expectedResponse: '.StatusCode == 200' # JQ Query on Status.Response @TODO: Improve syntax and SRC
 #    expectedResponse: '.Body.token != ""'
     insecureSkipTLSVerify: true
     waitTimeout: 5m
-    rollbackRetriesLimit: 5
+    rollbackRetriesLimit: 50
     url:  http://127.0.0.1:8081/api/v1/auth
     method: GET
-#    body: ""
+    body:
     headers:
       Content-Type:
         - "application/json"

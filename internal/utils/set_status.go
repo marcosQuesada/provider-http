@@ -20,7 +20,7 @@ type RequestResource struct {
 	HttpRequest    httpClient.HttpRequest
 	LocalClient    client.Client
 
-	Action string
+	Action string // @TODO: Deprecate
 }
 
 func (rr *RequestResource) SetStatusCode() SetRequestStatusFunc {
