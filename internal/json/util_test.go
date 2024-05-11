@@ -13,7 +13,7 @@ var (
 		Method: "POST",
 		Body:   runtime.RawExtension{Raw: []byte("{ username: .payload.body.username, email: .payload.body.email }")},
 		URL:    ".payload.baseUrl",
-		// Headers: testHeaders,
+		// Headers: testHeaders, // @TODO
 	}
 
 	testPutMapping = v1alpha1.Mapping{
@@ -37,14 +37,14 @@ var (
 var (
 	testForProvider = v1alpha1.RequestParameters{
 		Payload: v1alpha1.Payload{
-			Body:    "{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}",
+			Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"john_doe\", \"email\": \"john.doe@example.com\"}")},
 			BaseUrl: "https://api.example.com/users",
 		},
-		Mappings: []v1alpha1.Mapping{
-			testPostMapping,
-			testGetMapping,
-			testPutMapping,
-			testDeleteMapping,
+		Mappings: v1alpha1.Mappings{
+			Create: &testPostMapping,
+			Get:    &testGetMapping,
+			Update: &testPutMapping,
+			Delete: &testDeleteMapping,
 		},
 	}
 )

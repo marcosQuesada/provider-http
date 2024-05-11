@@ -75,10 +75,10 @@ var (
 			BaseUrl: "https://api.example.com/users",
 		},
 		Mappings: v1alpha1_request.Mappings{
-			&testPostMapping,
-			&testGetMapping,
-			&testPutMapping,
-			&testDeleteMapping,
+			Create: &testPostMapping,
+			Get:    &testGetMapping,
+			Update: &testPutMapping,
+			Delete: &testDeleteMapping,
 		},
 	}
 
@@ -164,7 +164,7 @@ func Test_SetRequestResourceStatus(t *testing.T) {
 				t.Fatalf("SetRequestResourceStatus(...): -want error, +got error: %s", diff)
 			}
 
-			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, testRequestCr.Status.Response.Body); diff != "" {
+			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, string(testRequestCr.Status.Response.Body.Raw)); diff != "" {
 				t.Fatalf("SetRequestResourceStatus(...): -want response body, +got response body: %s", diff)
 			}
 
@@ -180,7 +180,7 @@ func Test_SetRequestResourceStatus(t *testing.T) {
 				t.Fatalf("SetRequestResourceStatus(...): -want cache status code, +got cahce status code: %s", diff)
 			}
 
-			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, testRequestCr.Status.Cache.Response.Body); diff != "" {
+			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, string(testRequestCr.Status.Cache.Response.Body.Raw)); diff != "" {
 				t.Fatalf("SetRequestResourceStatus(...): -want cache body, +got cahce body: %s", diff)
 			}
 
@@ -254,7 +254,7 @@ func Test_DisposableRequest_SetRequestResourceStatus(t *testing.T) {
 				t.Fatalf("SetRequestResourceStatus(...): -want error, +got error: %s", diff)
 			}
 
-			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, testDisposableCr.Status.Response.Body); diff != "" {
+			if diff := cmp.Diff(tc.args.rr.HttpResponse.Body, string(testDisposableCr.Status.Response.Body.Raw)); diff != "" {
 				t.Fatalf("SetRequestResourceStatus(...): -want response body, +got response body: %s", diff)
 			}
 

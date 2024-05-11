@@ -2,7 +2,7 @@ package json
 
 import (
 	"bytes"
-	"encoding/json"
+	encoder "encoding/json"
 )
 
 func Contains(container, containee map[string]interface{}) bool {
@@ -16,12 +16,12 @@ func Contains(container, containee map[string]interface{}) bool {
 
 func IsJSONString(jsonStr string) bool {
 	var js map[string]interface{}
-	return json.Unmarshal([]byte(jsonStr), &js) == nil
+	return encoder.Unmarshal([]byte(jsonStr), &js) == nil
 }
 
 func JsonStringToMap(jsonStr string) map[string]interface{} {
 	var jsonData map[string]interface{}
-	_ = json.Unmarshal([]byte(jsonStr), &jsonData)
+	_ = encoder.Unmarshal([]byte(jsonStr), &jsonData)
 	return jsonData
 }
 
@@ -45,23 +45,23 @@ func ConvertJSONStringsToMaps(merged *map[string]interface{}) {
 }
 
 func StructToMap(obj interface{}) (newMap map[string]interface{}, err error) {
-	data, err := json.Marshal(obj) // Convert to a json string
+	data, err := encoder.Marshal(obj) // Convert to a json string
 
 	if err != nil {
 		return
 	}
 
-	err = json.Unmarshal(data, &newMap) // Convert to a map
+	err = encoder.Unmarshal(data, &newMap) // Convert to a map
 	return
 }
 
 func deepEqual(a, b interface{}) bool {
-	aBytes, err := json.Marshal(a)
+	aBytes, err := encoder.Marshal(a)
 	if err != nil {
 		return false
 	}
 
-	bBytes, err := json.Marshal(b)
+	bBytes, err := encoder.Marshal(b)
 	if err != nil {
 		return false
 	}
