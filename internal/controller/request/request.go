@@ -80,7 +80,8 @@ func Setup(mgr ctrl.Manager, o controller.Options, timeout time.Duration) error 
 		managed.WithPollInterval(o.PollInterval),
 		managed.WithTimeout(timeout),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
-		managed.WithConnectionPublishers(cps...))
+		managed.WithConnectionPublishers(cps...),
+		managed.WithManagementPolicies())
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -202,10 +203,10 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (c *external) deployAction(ctx context.Context, cr *v1alpha1.Request, action Action) error {
-	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action)
+	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action) // @TODO: Decouple Action from implementation
 	if !ok {
 		c.logger.Info(errMappingNotFound, action)
-		return nil
+		return nil // @TODO: Makes Action Optional
 	}
 
 	requestDetails, err := generateValidRequestDetails(cr, mapping)
@@ -301,7 +302,8 @@ func getReferenceInfo(ref v1alpha1.Reference) (string, string, string, string) {
 
 // resolveReferencies resolves references for the current Object. If it fails to
 // resolve some reference, e.g.: due to reference not ready, it will then return
-// error and requeue to wait for resolving it next time.
+// error and requeue to wait for resolving it next time.  @TODO: Test and segregate
+// nolint:gocyclo
 func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request) error {
 	c.logger.Debug("Resolving Request referencies.", "obj", obj.Name)
 
@@ -335,7 +337,7 @@ func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request
 			}
 
 			if !isExpected {
-				return fmt.Errorf("condition %s Not acomplished yet on %s %s", ref.DependsOn.Condition, ref.DependsOn.Kind, ref.DependsOn.Name)
+				return fmt.Errorf("condition %s Not accomplished yet on %s %s", ref.DependsOn.Condition, ref.DependsOn.Kind, ref.DependsOn.Name)
 			}
 		}
 

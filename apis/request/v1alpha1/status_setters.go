@@ -1,9 +1,8 @@
 package v1alpha1
 
 import (
+	encoder "encoding/json"
 	"time"
-
-	"github.com/crossplane-contrib/provider-http/internal/json"
 )
 
 func (d *Request) SetStatusCode(statusCode int) {
@@ -17,7 +16,7 @@ func (d *Request) SetHeaders(headers map[string][]string) {
 func (d *Request) SetBody(body string) {
 	d.Status.Response.RawBody = body
 	d.Status.Response.Body.Raw = []byte("{}")
-	if len(body) > 0 && json.IsJSONString(body) {
+	if len(body) > 0 && IsJSONString(body) {
 		d.Status.Response.Body.Raw = []byte(body)
 	}
 }
@@ -50,8 +49,13 @@ func (d *Request) SetCache(statusCode int, headers map[string][]string, body str
 
 	d.Status.Cache.Response.RawBody = body
 	d.Status.Cache.Response.Body.Raw = []byte("{}")
-	if len(body) > 0 && json.IsJSONString(body) {
+	if len(body) > 0 && IsJSONString(body) {
 		d.Status.Cache.Response.Body.Raw = []byte(body)
 	}
 	d.Status.Cache.LastUpdated = time.Now().UTC().Format(time.RFC3339)
+}
+
+func IsJSONString(jsonStr string) bool { // @TODO: HERE!
+	var js map[string]interface{}
+	return encoder.Unmarshal([]byte(jsonStr), &js) == nil
 }

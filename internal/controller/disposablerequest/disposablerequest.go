@@ -70,7 +70,8 @@ func Setup(mgr ctrl.Manager, o controller.Options, timeout time.Duration) error 
 		managed.WithPollInterval(o.PollInterval),
 		managed.WithTimeout(timeout),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
-		managed.WithConnectionPublishers(cps...))
+		managed.WithConnectionPublishers(cps...),
+		managed.WithManagementPolicies())
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -201,7 +202,6 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequ
 			resource.SetError(errors.New("Response does not match the expected format, retries limit "+fmt.Sprint(limit))), resource.SetRequestDetails())
 	}
 
-	//return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(),  resource.SetBody(),  resource.SetRequestDetails())
 	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetSynced(), resource.SetBody(), resource.SetRequestDetails())
 }
 

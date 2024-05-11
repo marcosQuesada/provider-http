@@ -34,8 +34,8 @@ type DisposableRequestParameters struct {
 	Method string `json:"method"`
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.headers' is immutable"
 	Headers map[string][]string `json:"headers,omitempty"`
-	//// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.body' is immutable"
-	//Body string `json:"body,omitempty"`
+	//// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Field 'forProvider.body' is immutable" //@TODO
+	// Body string `json:"body,omitempty"`
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Body runtime.RawExtension `json:"body,omitempty"`

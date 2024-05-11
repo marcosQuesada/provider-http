@@ -4,7 +4,7 @@ metadata:
   name: auth-request
   namespace: default
 spec:
-  deletionPolicy: Orphan
+  managementPolicies: ["Create", "Observe"]
   forProvider:
 #    expectedResponse: '.StatusCode == 200' # @TODO: Improve syntax and SRC
 #    expectedResponse: '.Body.token != ""'
@@ -25,6 +25,7 @@ kind: Request
 metadata:
   name: exec-request
 spec:
+  managementPolicies: ["*"]
   references:
     - dependsOn:
         apiVersion: http.crossplane.io/v1alpha1

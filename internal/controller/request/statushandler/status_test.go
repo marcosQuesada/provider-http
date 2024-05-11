@@ -63,10 +63,10 @@ var (
 			BaseUrl: "https://api.example.com/users",
 		},
 		Mappings: v1alpha1.Mappings{
-			&testPostMapping,
-			&testGetMapping,
-			&testPutMapping,
-			&testDeleteMapping,
+			Create: &testPostMapping,
+			Get:    &testGetMapping,
+			Update: &testPutMapping,
+			Delete: &testDeleteMapping,
 		},
 	}
 )

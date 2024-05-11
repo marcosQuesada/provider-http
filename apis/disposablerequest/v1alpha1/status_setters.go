@@ -1,9 +1,8 @@
 package v1alpha1
 
 import (
+	encoder "encoding/json"
 	"strings"
-
-	"github.com/crossplane-contrib/provider-http/internal/json"
 )
 
 func (d *DisposableRequest) SetStatusCode(statusCode int) {
@@ -17,7 +16,7 @@ func (d *DisposableRequest) SetHeaders(headers map[string][]string) {
 func (d *DisposableRequest) SetBody(body string) {
 	d.Status.Response.RawBody = body
 	d.Status.Response.Body.Raw = []byte("{}")
-	if len(body) > 0 && json.IsJSONString(body) {
+	if len(body) > 0 && IsJSONString(body) {
 		d.Status.Response.Body.Raw = []byte(body)
 	}
 }
@@ -45,4 +44,8 @@ func (d *DisposableRequest) SetRequestDetails(url, method, body string, headers 
 	d.Status.RequestDetails.URL = url
 	d.Status.RequestDetails.Headers = headers
 	d.Status.RequestDetails.Method = method
+}
+func IsJSONString(jsonStr string) bool { // @TODO: HERE!
+	var js map[string]interface{}
+	return encoder.Unmarshal([]byte(jsonStr), &js) == nil
 }

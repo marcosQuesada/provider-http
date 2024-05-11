@@ -539,7 +539,6 @@ func TestJqFromRawExtension(t *testing.T) {
 
 	// '.items[] | select(.metadata.name == "my-pod").status.phase'
 	expected = "(.status.conditions[]| select(.type == \"Ready\").status == \"True\") and (.status.conditions[]| select(.type == \"Synced\").status == \"True\")"
-	//expected = ".status.conditions[].reason == \"Available\" and .status.conditions[].reason == \"ReconcileSuccess\""
 	isExpected, err = jq.ParseBool(expected, rawMap)
 	require.NoError(t, err)
 	require.True(t, isExpected)

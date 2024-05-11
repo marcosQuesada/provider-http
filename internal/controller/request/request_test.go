@@ -357,7 +357,7 @@ func TestPatchFieldValueToObject(t *testing.T) {
 					Body:    runtime.RawExtension{Raw: []byte("{ \"id\": 1112, \"name\": \"fake-simple-name-2\", \"color\": \"simple-color-2\", \"price\": 123219, \"state\": \"foo-state-2\" }")},
 				},
 				Headers: map[string][]string{
-					"Authorization": []string{"Basic BASE64_ENCODED_USER_CREDENTIALS"},
+					"Authorization": {"Basic BASE64_ENCODED_USER_CREDENTIALS"},
 				},
 				WaitTimeout:           nil,
 				InsecureSkipTLSVerify: false,
