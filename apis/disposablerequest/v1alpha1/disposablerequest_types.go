@@ -52,6 +52,31 @@ type DisposableRequestParameters struct {
 	// The expression should return a boolean; if true, the response is considered expected.
 	// Example: '.Body.job_status == "success"'
 	ExpectedResponse string `json:"expectedResponse,omitempty"`
+
+	// SecretInjectionConfig specifies the secrets receiving patches for response data.
+	// +optional
+	SecretInjectionConfigs []SecretInjectionConfig `json:"secretInjectionConfigs,omitempty"`
+}
+
+// SecretInjectionConfig represents the configuration for injecting secret data into a Kubernetes secret.
+type SecretInjectionConfig struct {
+	// SecretRef contains the name and namespace of the Kubernetes secret where the data will be injected.
+	SecretRef SecretRef `json:"secretRef"`
+
+	// SecretKey is the key within the Kubernetes secret where the data will be injected.
+	SecretKey string `json:"secretKey"`
+
+	// ResponsePath is is a jq filter expression represents the path in the response where the secret value will be extracted from.
+	ResponsePath string `json:"responsePath"`
+}
+
+// SecretRef contains the name and namespace of a Kubernetes secret.
+type SecretRef struct {
+	// Name is the name of the Kubernetes secret.
+	Name string `json:"name"`
+
+	// Namespace is the namespace of the Kubernetes secret.
+	Namespace string `json:"namespace"`
 }
 
 // A DisposableRequestSpec defines the desired state of a DisposableRequest.

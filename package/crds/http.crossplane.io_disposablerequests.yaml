@@ -103,6 +103,43 @@ spec:
                       retry HTTP request by sending again the request.
                     format: int32
                     type: integer
+                  secretInjectionConfigs:
+                    description: SecretInjectionConfig specifies the secrets receiving
+                      patches for response data.
+                    items:
+                      description: SecretInjectionConfig represents the configuration
+                        for injecting secret data into a Kubernetes secret.
+                      properties:
+                        responsePath:
+                          description: ResponsePath is is a jq filter expression represents
+                            the path in the response where the secret value will be
+                            extracted from.
+                          type: string
+                        secretKey:
+                          description: SecretKey is the key within the Kubernetes
+                            secret where the data will be injected.
+                          type: string
+                        secretRef:
+                          description: SecretRef contains the name and namespace of
+                            the Kubernetes secret where the data will be injected.
+                          properties:
+                            name:
+                              description: Name is the name of the Kubernetes secret.
+                              type: string
+                            namespace:
+                              description: Namespace is the namespace of the Kubernetes
+                                secret.
+                              type: string
+                          required:
+                          - name
+                          - namespace
+                          type: object
+                      required:
+                      - responsePath
+                      - secretKey
+                      - secretRef
+                      type: object
+                    type: array
                   url:
                     type: string
                     x-kubernetes-validations:

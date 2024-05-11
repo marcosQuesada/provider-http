@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	datapatcher "github.com/crossplane-contrib/provider-http/internal/data-patcher"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -51,6 +52,7 @@ const (
 	errFailedToSendHttpDisposableRequest = "failed to send http request"
 	errFailedUpdateStatusConditions      = "failed updating status conditions"
 	ErrExpectedFormat                    = "JQ filter should return a boolean, but returned error: %s"
+	errPatchDataToSecret                 = "Warning, couldn't patch data from request to secret %s:%s:%s, error: %s"
 )
 
 // Setup adds a controller that reconciles DisposableRequest managed resources.
@@ -202,6 +204,8 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequ
 			resource.SetError(errors.New("Response does not match the expected format, retries limit "+fmt.Sprint(limit))), resource.SetRequestDetails())
 	}
 
+	c.patchResponseToSecret(ctx, cr, &resource.HttpResponse)
+
 	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetSynced(), resource.SetBody(), resource.SetRequestDetails())
 }
 
@@ -264,4 +268,13 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 func (c *external) Delete(_ context.Context, _ resource.Managed) error {
 	c.logger.Debug("Delete DisposableRequest called.")
 	return nil
+}
+
+func (c *external) patchResponseToSecret(ctx context.Context, cr *v1alpha1.DisposableRequest, response *httpClient.HttpResponse) {
+	for _, ref := range cr.Spec.ForProvider.SecretInjectionConfigs {
+		err := datapatcher.PatchResponseToSecret(ctx, c.localKube, c.logger, response, ref.ResponsePath, ref.SecretKey, ref.SecretRef.Name, ref.SecretRef.Namespace)
+		if err != nil {
+			c.logger.Info(fmt.Sprintf(errPatchDataToSecret, ref.SecretRef.Name, ref.SecretRef.Namespace, ref.SecretKey, err.Error()))
+		}
+	}
 }

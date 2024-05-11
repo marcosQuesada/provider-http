@@ -12,14 +12,12 @@ spec:
     rollbackRetriesLimit: 5
     url:  http://172.17.0.1:8081/api/v1/pets
     method: POST
-    body: |
-      {
-        "color": "simple-color",
-        "id": 1111,
-        "name": "fake-simple-name",
-        "price": 123213,
-        "state": "bar-state"
-      }
+    body:
+      id: 1112
+      name: "fake-simple-name-2"
+      color: "simple-color-2"
+      price: 123219
+      state: "foo-state-2"
     headers:
       Content-Type:
       - "application/json"
