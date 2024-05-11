@@ -35,9 +35,8 @@ var (
 	}
 
 	testPutMapping = v1alpha1.Mapping{
-		Method: "PUT",
-		Body:   runtime.RawExtension{Raw: []byte(`{"username": "john_doe_new_username" }`)},
-		//Body:    runtime.RawExtension{Raw: []byte("{\"username\": \"\\x34\\john_doe_new_username\\x34\\\" }")},
+		Method:  "PUT",
+		Body:    runtime.RawExtension{Raw: []byte(`{"username": "john_doe_new_username" }`)},
 		URL:     "(.payload.baseUrl + \"/\" + .response.body.id)",
 		Headers: testHeaders,
 	}
@@ -60,10 +59,10 @@ var (
 			BaseUrl: "https://api.example.com/users",
 		},
 		Mappings: v1alpha1.Mappings{
-			&testPostMapping,
-			&testGetMapping,
-			&testPutMapping,
-			&testDeleteMapping,
+			Create: &testPostMapping,
+			Get:    &testGetMapping,
+			Update: &testPutMapping,
+			Delete: &testDeleteMapping,
 		},
 		Headers: map[string][]string{},
 	}
@@ -108,7 +107,7 @@ func Test_GenerateRequestDetails(t *testing.T) {
 				forProvider:   testForProvider,
 				response: v1alpha1.Response{
 					StatusCode: 200,
-					Body:       runtime.RawExtension{Raw: []byte(`{"id":"123","username":"john_doe"}`)},
+					Body:       runtime.RawExtension{Raw: []byte(`{"id":"123", "username":"john_doe_new_username"}`)},
 					Headers:    testHeaders,
 				},
 				logger: logging.NewNopLogger(),
@@ -393,11 +392,12 @@ func Test_generateRequestObject(t *testing.T) {
 	}
 }
 func TestEmbeddedRawExtensionMarshal(t *testing.T) {
+	// nolint:musttag
 	type test struct {
 		Ext runtime.RawExtension
 	}
 
-	extension := test{Ext: runtime.RawExtension{Raw: []byte(`{foo:{"foo":"bar"}`)}}
+	extension := test{Ext: runtime.RawExtension{Raw: []byte(`{"foo":"bar"}`)}}
 	data, err := json.Marshal(extension)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
