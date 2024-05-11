@@ -35,6 +35,15 @@ func (d *DisposableRequest) SetError(err error) {
 	}
 }
 
+const KubeErrorStatus = "KUBE_ERROR"
+const HttpStatusCodeErrorStatus = "HTTP_STATUS_CODE_ERROR"
+const ExpectedResponseErrorStatus = "EXPECTED_RESPONSE_ERROR"
+const SuccessStatus = "SUCCESS"
+
+func (d *DisposableRequest) SetStatus(st string) {
+	d.Status.Status = st
+}
+
 func (d *DisposableRequest) SetRequestDetails(url, method, body string, headers map[string][]string) {
 	d.Status.RequestDetails.Body.Raw = []byte("{}")
 	body = strings.Trim(body, " ")
@@ -45,6 +54,7 @@ func (d *DisposableRequest) SetRequestDetails(url, method, body string, headers 
 	d.Status.RequestDetails.Headers = headers
 	d.Status.RequestDetails.Method = method
 }
+
 func IsJSONString(jsonStr string) bool { // @TODO: HERE!
 	var js map[string]interface{}
 	return encoder.Unmarshal([]byte(jsonStr), &js) == nil

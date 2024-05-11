@@ -110,6 +110,7 @@ type DisposableRequestStatus struct {
 	Response            Response `json:"response,omitempty"`
 	Failed              int32    `json:"failed,omitempty"`
 	Error               string   `json:"error,omitempty"`
+	Status              string   `json:"status,omitempty"`
 	Synced              bool     `json:"synced,omitempty"`
 	RequestDetails      Mapping  `json:"requestDetails,omitempty"`
 }
@@ -121,6 +122,7 @@ type DisposableRequestStatus struct {
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.status"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,http}
 type DisposableRequest struct {

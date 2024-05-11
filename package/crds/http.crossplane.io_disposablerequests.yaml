@@ -31,6 +31,9 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
+    - jsonPath: .status.status
+      name: STATUS
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -425,6 +428,8 @@ spec:
                 required:
                 - raw-body
                 type: object
+              status:
+                type: string
               synced:
                 type: boolean
             type: object

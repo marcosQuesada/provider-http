@@ -87,6 +87,14 @@ func (rr *RequestResource) SetError(err error) SetRequestStatusFunc {
 	}
 }
 
+func (rr *RequestResource) SetStatus(st string) SetRequestStatusFunc {
+	return func() {
+		if resourceSetStatus, ok := rr.Resource.(StatusSetter); ok {
+			resourceSetStatus.SetStatus(st)
+		}
+	}
+}
+
 func (rr *RequestResource) ResetFailures() SetRequestStatusFunc {
 	return func() {
 		if resetter, ok := rr.Resource.(ResetFailures); ok {
@@ -111,6 +119,10 @@ type SyncedSetter interface {
 
 type ErrorSetter interface {
 	SetError(err error)
+}
+
+type StatusSetter interface {
+	SetStatus(st string)
 }
 
 type ResetFailures interface {

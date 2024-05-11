@@ -179,14 +179,16 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequ
 
 	if err != nil {
 		setErr := resource.SetError(err)
-		if settingError := utils.SetRequestResourceStatus(*resource, setErr, resource.SetRequestDetails()); settingError != nil {
+		setSt := resource.SetStatus(v1alpha1.KubeErrorStatus)
+		if settingError := utils.SetRequestResourceStatus(*resource, setErr, setSt, resource.SetRequestDetails()); settingError != nil {
 			return errors.Wrap(settingError, utils.ErrFailedToSetStatus)
 		}
 		return err
 	}
 
 	if utils.IsHTTPError(res.StatusCode) {
-		if settingError := utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetBody(), resource.SetRequestDetails(), resource.SetError(nil)); settingError != nil {
+		setSt := resource.SetStatus(v1alpha1.HttpStatusCodeErrorStatus)
+		if settingError := utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetBody(), resource.SetRequestDetails(), resource.SetError(nil), setSt); settingError != nil {
 			return errors.Wrap(settingError, utils.ErrFailedToSetStatus)
 		}
 
@@ -200,13 +202,14 @@ func (c *external) deployAction(ctx context.Context, cr *v1alpha1.DisposableRequ
 
 	if !isExpectedResponse {
 		limit := utils.GetRollbackRetriesLimit(cr.Spec.ForProvider.RollbackRetriesLimit)
+		setSt := resource.SetStatus(v1alpha1.ExpectedResponseErrorStatus)
 		return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetBody(),
-			resource.SetError(errors.New("Response does not match the expected format, retries limit "+fmt.Sprint(limit))), resource.SetRequestDetails())
+			resource.SetError(errors.New("Response does not match the expected format, retries limit "+fmt.Sprint(limit))), resource.SetRequestDetails(), setSt)
 	}
 
 	c.patchResponseToSecret(ctx, cr, &resource.HttpResponse)
 
-	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetSynced(), resource.SetBody(), resource.SetRequestDetails())
+	return utils.SetRequestResourceStatus(*resource, resource.SetStatusCode(), resource.SetHeaders(), resource.SetSynced(), resource.SetBody(), resource.SetRequestDetails(), resource.SetStatus(v1alpha1.SuccessStatus))
 }
 
 func (c *external) isResponseAsExpected(cr *v1alpha1.DisposableRequest, res httpClient.HttpResponse) (bool, error) {
