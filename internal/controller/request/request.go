@@ -162,7 +162,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		}, nil
 	}
 
-	if err != nil && errors.Is(err, ErrMappingNotFound) {
+	if err != nil && errors.Is(err, ErrMappingNotFound) { // @TODO: Make Mapping Optional
 		cr.Status.SetConditions(xpv1.Available())
 		return managed.ExternalObservation{
 			ResourceExists:   true,
@@ -317,7 +317,7 @@ func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request
 		res := &unstructured.Unstructured{}
 		res.SetAPIVersion(refAPIVersion)
 		res.SetKind(refKind)
-		// Try to get referenced resource
+
 		err := c.localKube.Get(ctx, client.ObjectKey{
 			Namespace: refNamespace,
 			Name:      refName,
@@ -327,9 +327,6 @@ func (c *external) resolveReferencies(ctx context.Context, obj *v1alpha1.Request
 			return errors.Wrap(err, errGetReferencedResource)
 		}
 
-		// @TODO: Assert Condition
-
-		// status.response.statusCode == 200
 		if ref.DependsOn != nil && ref.DependsOn.Condition != "" {
 			isExpected, err := jq.ParseBool(ref.DependsOn.Condition, res.Object)
 			if err != nil {

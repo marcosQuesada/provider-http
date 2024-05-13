@@ -110,7 +110,7 @@ func (c *external) desiredState(cr *v1alpha1.Request) (string, error) {
 func (c *external) requestDetails(cr *v1alpha1.Request, action Action) (requestgen.RequestDetails, error) {
 	mapping, ok := getMappingByAction(&cr.Spec.ForProvider, action)
 	if !ok {
-		return requestgen.RequestDetails{}, ErrMappingNotFound
+		return requestgen.RequestDetails{}, ErrMappingNotFound // @TODO: Decouple Action from implementation
 	}
 
 	return generateValidRequestDetails(cr, mapping)
