@@ -34,6 +34,7 @@ spec:
       - method: "PUT"
         body: |
           {
+            id:  .payload.body.id, 
             todo_name: .payload.body.name, 
             reminder: .payload.body.reminder, 
             responsible: .payload.body.responsible

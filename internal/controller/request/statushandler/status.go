@@ -43,11 +43,16 @@ func (r *requestStatusHandler) SetRequestStatus() error {
 
 	basicSetters := []utils.SetRequestStatusFunc{
 		r.resource.SetStatusCode(),
-		r.resource.SetHeaders(),
-		r.resource.SetBody(),
-		r.resource.SetRequestDetails(),
 	}
-
+	if !r.forProvider.SilentResponseHeaders {
+		basicSetters = append(basicSetters, r.resource.SetHeaders())
+	}
+	if !r.forProvider.SilentResponseBody {
+		basicSetters = append(basicSetters, r.resource.SetBody())
+	}
+	if !r.forProvider.SilentRequestDetails {
+		basicSetters = append(basicSetters, r.resource.SetRequestDetails())
+	}
 	basicSetters = append(basicSetters, *r.extraSetters...)
 
 	if utils.IsHTTPError(r.resource.HttpResponse.StatusCode) {

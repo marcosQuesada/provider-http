@@ -44,13 +44,13 @@ spec:
         name: auth-request
         namespace: default
         condition: ".status.response.statusCode == 200"
-      patchesFrom:
-        apiVersion: http.crossplane.io/v1alpha1
-        kind: DisposableRequest
-        name: auth-request
-        namespace: default
-        fieldPath: status.response.body.token
-      toFieldPath: spec.forProvider.headers.Authorization[0]
+#      patchesFrom:
+#        apiVersion: http.crossplane.io/v1alpha1
+#        kind: DisposableRequest
+#        name: auth-request
+#        namespace: default
+#        fieldPath: status.response.body.token
+#      toFieldPath: spec.forProvider.headers.Authorization[0]
     # Patching from resource that will always be there
     - patchesFrom:
         apiVersion: v1
@@ -58,8 +58,16 @@ spec:
         name: foobarx
         namespace: default
         fieldPath: data.name
-      toFieldPath: spec.forProvider.payload.body.name
+      toFieldPath: spec.forProvider.payload.body.state
+    - patchesFrom:
+        apiVersion: v1
+        kind: Secret
+        name: response-secret
+        namespace: default
+        fieldPath: data.extracted-data
+      toFieldPath: spec.forProvider.headers.Authorization[0]
   forProvider:
+    silentRequestDetails: true
     headers:
       Content-Type:
         - "application/json"
@@ -89,7 +97,7 @@ spec:
         method: "GET"
         url: (.payload.baseUrl + "/" + .response.body.name)
       update:
-        method: "PUT"
+        method: "POST"
         url: (.payload.baseUrl + "/" + .response.body.name)
         body:
           id: .payload.body.id

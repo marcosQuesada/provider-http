@@ -171,6 +171,12 @@ spec:
                       body:
                         x-kubernetes-preserve-unknown-fields: true
                     type: object
+                  silentRequestDetails:
+                    type: boolean
+                  silentResponseBody:
+                    type: boolean
+                  silentResponseHeaders:
+                    type: boolean
                   waitTimeout:
                     type: string
                 required:

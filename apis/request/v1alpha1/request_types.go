@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"encoding/base64"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"reflect"
 
 	"github.com/crossplane/crossplane-runtime/pkg/fieldpath"
@@ -37,6 +39,13 @@ type RequestParameters struct {
 
 	// InsecureSkipTLSVerify, when set to true, skips TLS certificate checks for the HTTP request
 	InsecureSkipTLSVerify bool `json:"insecureSkipTLSVerify,omitempty"`
+
+	// +optional
+	SilentResponseHeaders bool `json:"silentResponseHeaders"`
+	// +optional
+	SilentResponseBody bool `json:"silentResponseBody"`
+	// +optional
+	SilentRequestDetails bool `json:"silentRequestDetails"`
 }
 
 type Mappings struct {
@@ -236,6 +245,13 @@ func (r *Reference) ApplyFromFieldPathPatch(from, to runtime.Object) error {
 		return err
 	}
 
+	// @TODO: Secrets need B64 decode before using it, quick and dirty Workaround
+	if isSecret(from) {
+		raw, err := base64.StdEncoding.DecodeString(out.(string))
+		if err == nil {
+			out = string(raw)
+		}
+	}
 	return PatchFieldValueToObject(*r.ToFieldPath, out, to)
 }
 
@@ -254,4 +270,9 @@ func PatchFieldValueToObject(path string, value interface{}, to runtime.Object) 
 	}
 
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(paved.UnstructuredContent(), to)
+}
+
+func isSecret(obj runtime.Object) bool {
+	v, ok := obj.(*unstructured.Unstructured)
+	return ok && v.GetKind() == "Secret"
 }
